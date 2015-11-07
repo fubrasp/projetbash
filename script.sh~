@@ -1,16 +1,7 @@
 #!/bin/bash
 
 #CONSTANTES
-
-#fichiers de confs
-. ./test2.cfg
-		
-#a titre de test
-
-#fonction  dans le fichier test2.cfg
-consoleLog
-
-#fichier_conf_nom=""
+fichier_conf_nom=""
 
 function usage(){
     printf "Utilisation du script :\n"
