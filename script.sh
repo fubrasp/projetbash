@@ -7,7 +7,7 @@
 		
 #a titre de test
 
-#fichier_conf_nom=""
+fichier_conf_nom="test2.txt"
 
 #IMPORTS
 #on doit dabord utiliser la fonction aui partage ses variables avec le bash courant
@@ -52,6 +52,13 @@ then
 fi
  
 function backup(){
+backup="backup_"
+	current_hour=$(date +%Y%H%M%S)
+	separateur="/"
+	full_path=$PWD$separateur$backup$current_hour
+
+
+
     if [ -d "$1" ]
     then
 	echo "dossier deja existant"
@@ -59,15 +66,24 @@ function backup(){
 	mkdir "$1"
     fi  
     echo "recupération des dossiers de $fichier_conf_nom"
-#    while read line  
-#    do   
-#	echo -e " copie de $line"
+    while read line  
+    do   
+	echo -e " copie de $line"
 	#find /home -type d -name $line -print
-	#marche pas
-#    done < $fichier_conf_nom
+	result=$(find /home -type d -name $line)
+	if [ -z $result ]
+		then
+			echo "$fichier n'existe pas"
+		else
+			echo "$fichier trouve:"
+			echo $result
+			#$full_path reste le meme dans la boucle!
+			cp -R $line $full_path
+		fi
+    done < $fichier_conf_nom
     
-#    echo "le backup est dans :" $1
-recherche_copie $fich_conf_type2 
+    echo "le backup est dans :" $1
+#recherche_copie $fich_conf_type2 
 }
 
 function recup(){
