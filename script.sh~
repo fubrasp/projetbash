@@ -7,8 +7,9 @@
 		
 #a titre de test
 
-fichier_conf_nom="test2.txt"
-
+#fichier_conf_nom="test2.txt"
+fichier_conf_nom=$3
+echo "BACKUP_ARG: $3"	
 #IMPORTS
 #on doit dabord utiliser la fonction aui partage ses variables avec le bash courant
 importNoms
@@ -26,7 +27,7 @@ function recherche_copie(){
 	backup="backup_"
 	current_hour=$(date +%Y%H%M%S)
 	separateur="/"
-	full_path=$PWD$separateur$backup$current_hour
+	echo full_path=$PWD$separateur$backup$current_hour
 
 	for fichier in $@
 	do
@@ -55,8 +56,7 @@ function backup(){
 backup="backup_"
 	current_hour=$(date +%Y%H%M%S)
 	separateur="/"
-	full_path=$PWD$separateur$backup$current_hour
-
+	
 
 
     if [ -d "$1" ]
@@ -65,8 +65,10 @@ backup="backup_"
     else
 	mkdir "$1"
     fi  
-    echo "recupération des dossiers de $fichier_conf_nom"
-    while read line  
+	echo full_path=$PWD$separateur$1$separateur$backup$current_hour    
+	echo "recupération des dossiers de $fichier_conf_nom"
+    
+while read line  
     do   
 	echo -e " copie de $line"
 	#find /home -type d -name $line -print
