@@ -10,7 +10,7 @@ function usage(){
     printf "\t--backupdir               :indique l'endroit a mettre le backup"
     printf "\t-h                       : affiche ce message.\n"
 }
- 
+
 #abscence d'arguments -> affichage de l'usage
 if [ $# -eq 0 ]
 then
@@ -50,18 +50,29 @@ while read line
 			echo $result
 			#$full_path reste le meme dans la boucle!
 			cp -avr "$line" "$full_path"
-			
+
 			echo -e "\nORIGINE: $line"
 			echo -e "DESTINATION: $full_path"
 		fi
     done < $fichier_conf_nom
 
-    echo "le backup est dans :" $1
+    echo "le backup est dans :" $1 "est il est crypté"
+    crypte $1
+
 }
 
+
+#Recupere le parametre du dossier principale
 function recup(){
    fichier_conf_nom=$1
 }
+
+#Fonction qui crypte le backup
+function crypte(){
+    gpg-zip -c -o $1.gpg $1
+}
+
+#Cette partie gere les arguments et lance la bonne méthode
 OPTS=$( getopt -o h -l conf:,backupdir: -- "$@" )
 if [ $? != 0 ]
 then
