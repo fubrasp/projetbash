@@ -9,10 +9,11 @@
 
 #fichier_conf_nom="test2.txt"
 fichier_conf_nom=$3
-#echo "BACKUP_ARG: $3"	
+#echo "BACKUP_ARG: $3"
 #IMPORTS
 #on doit dabord utiliser la fonction aui partage ses variables avec le bash courant
 importNoms
+# a quoi ça sert ?
 fich_conf_type2="${dossiers_de_sauvegarde[@]}"
 
 function usage(){
@@ -39,7 +40,8 @@ function recherche_copie(){
 			echo "$fichier trouve:"
 			echo $result
 			#$full_path reste le meme dans la boucle!
-			cp -R $fichier $full_path
+			#probleme ici  ! ça semble pas copier
+			cp -r $fichier $full_path
 		fi
 	done
 }
