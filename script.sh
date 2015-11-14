@@ -1,21 +1,9 @@
 #!/bin/bash
 
-#CONSTANTES
-
-#fichiers de confs
-. ./test2.cfg
-
-#a titre de test
-
-#fichier_conf_nom="test2.txt"
+#nom du fichier de configuration passe en parametre de, apres --backupdir
 fichier_conf_nom=$3
-#echo "BACKUP_ARG: $3"
-#IMPORTS
-#on doit dabord utiliser la fonction aui partage ses variables avec le bash courant
-importNoms
-# a quoi ça sert ?
-fich_conf_type2="${dossiers_de_sauvegarde[@]}"
 
+#usage, explications 
 function usage(){
     printf "Utilisation du script :\n"
     printf "\t--conf                   : lance le backup  \n"
@@ -23,37 +11,15 @@ function usage(){
     printf "\t-h                       : affiche ce message.\n"
 }
  
-
-function recherche_copie(){
-	backup="backup_"
-	current_hour=$(date +%Y%H%M%S)
-	separateur="/"
-	echo full_path=$PWD$separateur$backup$current_hour
-
-	for fichier in $@
-	do
-		result=$(find /home -name "$fichier")
-		if [ -z $result ]
-		then
-			echo "$fichier n'existe pas"
-		else
-			echo "$fichier trouve:"
-			echo $result
-			#$full_path reste le meme dans la boucle!
-			#probleme ici  ! ça semble pas copier
-			cp -r $fichier $full_path
-		fi
-	done
-}
-
-
-
-
+#abscence d'arguments -> affichage de l'usage
 if [ $# -eq 0 ]
 then
     usage
 fi
 
+#fonction de backup
+#creer un dossier pour les backup
+#copier les dossiers mentionnes dans le fichier de configuration (prealablement edites)
 function backup(){
 backup="backup_"
 	current_hour=$(date +%Y%H%M%S)
@@ -61,12 +27,15 @@ backup="backup_"
 
     if [ -d "$1" ]
     then
-	echo "dossier deja existant"
+	echo -e "\nDossier deja existant\n"
     else
 	mkdir "$1"
     fi
-	echo full_path=$PWD$separateur$1$separateur$backup$current_hour 
-	echo "recupération des dossiers de $fichier_conf_nom"
+	#chemin 
+	#echo -e "full_path=$PWD$separateur$1$separateur$backup$current_hour \n" 
+	#redirection ambigu si pas de param
+	full_path=$PWD$separateur$1$separateur$backup$current_hour
+	echo -e "Recuperation des dossiers de: $fichier_conf_nom \n"
 
 while read line 
     do
@@ -81,11 +50,13 @@ while read line
 			echo $result
 			#$full_path reste le meme dans la boucle!
 			cp -R $line $full_path
+			
+			echo -e "\nORIGINE: $line"
+			echo -e "DESTINATION: $full_path"
 		fi
     done < $fichier_conf_nom
 
     echo "le backup est dans :" $1
-#recherche_copie $fich_conf_type2
 }
 
 function recup(){
