@@ -41,7 +41,7 @@ while read line
     do
 	echo -e " copie de $line"
 	#find /home -type d -name $line -print
-	result=$(find /home -type d -name $line)
+	result=$(sudo find /home -type d -name $line)
 	if [ -z $result ]
 		then
 			echo "$fichier n'existe pas"
