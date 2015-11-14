@@ -39,9 +39,9 @@ backup="backup_"
 
 while read line 
     do
-	echo -e " copie de $line"
+	echo -e "copie de $line"
 	#find /home -type d -name $line -print
-	result=$(find /home -type d -name $line)
+	result=$(sudo find /home -type d -name $line)
 	if [ -z $result ]
 		then
 			echo "$fichier n'existe pas"
@@ -49,7 +49,7 @@ while read line
 			echo "$fichier trouve:"
 			echo $result
 			#$full_path reste le meme dans la boucle!
-			cp -R $line $full_path
+			cp -avr "$line" "$full_path"
 			
 			echo -e "\nORIGINE: $line"
 			echo -e "DESTINATION: $full_path"
