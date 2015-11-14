@@ -57,7 +57,8 @@ while read line
     done < $fichier_conf_nom
 
     echo "le backup est dans :" $1 "est il est crypté"
-    crypte $1
+    tar cvzf $1.tar.gz $1
+    crypte $1.tar.gz
 
 }
 
