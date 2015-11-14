@@ -4,7 +4,7 @@
 
 #fichiers de confs
 . ./test2.cfg
-		
+
 #a titre de test
 
 #fichier_conf_nom="test2.txt"
@@ -51,25 +51,23 @@ if [ $# -eq 0 ]
 then
     usage
 fi
- 
+
 function backup(){
 backup="backup_"
 	current_hour=$(date +%Y%H%M%S)
 	separateur="/"
-	
-
 
     if [ -d "$1" ]
     then
 	echo "dossier deja existant"
     else
 	mkdir "$1"
-    fi  
-	echo full_path=$PWD$separateur$1$separateur$backup$current_hour    
+    fi
+	echo full_path=$PWD$separateur$1$separateur$backup$current_hour 
 	echo "recupération des dossiers de $fichier_conf_nom"
-    
-while read line  
-    do   
+
+while read line 
+    do
 	echo -e " copie de $line"
 	#find /home -type d -name $line -print
 	result=$(find /home -type d -name $line)
@@ -83,9 +81,9 @@ while read line
 			cp -R $line $full_path
 		fi
     done < $fichier_conf_nom
-    
+
     echo "le backup est dans :" $1
-#recherche_copie $fich_conf_type2 
+#recherche_copie $fich_conf_type2
 }
 
 function recup(){
@@ -105,8 +103,7 @@ while true ; do
         --conf) recup $2; shift 2;;
 	--backupdir) backup $2; shift 2;;
         --) shift; break;;
-	
     esac
 done
- 
+
 exit 0
