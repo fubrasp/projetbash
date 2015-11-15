@@ -3,6 +3,8 @@
 #nom du fichier de configuration passe en parametre de, apres --backupdir
 fichier_conf_nom=$3
 
+#verification pour le backup
+a=""
 #usage, explications 
 function usage(){
     printf "Utilisation du script :\n"
@@ -73,8 +75,22 @@ function crypte(){
     gpg-zip -c -o $1.gpg $1
 }
 
+#ces 2 fonctions sont pour le diff entre 2 backups
+function compareA(){
+		a=$1
+}
+
+function compareB(){
+		echo test		
+		echo $a
+		b=$1
+		echo $b				
+		diff -r $a $b
+		exit 0
+}
+
 #Cette partie gere les arguments et lance la bonne méthode
-OPTS=$( getopt -o h -l conf:,backupdir: -- "$@" )
+OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB -- "$@" )
 if [ $? != 0 ]
 then
     exit 1
@@ -87,6 +103,8 @@ while true ; do
             exit 0;;
         --conf) recup $2; shift 2;;
 	--backupdir) backup $2; shift 2;;
+	--compA) compareA $2; shift 2;;
+	--compB) compareB $3; shift 2;;
         --) shift; break;;
     esac
 done
