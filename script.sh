@@ -85,11 +85,30 @@ function compareA(){
 }
 
 function compareB(){
-		echo test
+		extension=".tar.gz"
+		separateur="/"		
 		echo $a
 		b=$1
 		echo $b
+		#On decrypte les deux archives a comparer (diff)
+		gpg $a
+		gpg $b
+		#On fait un "basename" (on enleve les extension), un substring aurait ete plus propre..		
+		a=$(echo "${a%%.*}")
+		b=$(echo "${b%%.*}")
+		#On concatene l'extension tar gz, on detare et decompresse		
+		c=$a$extension
+		d=$b$extension
+		#On detare et decompresse, parce que un diff sur 2 archives stipule seulement leur difference sans etre precis
+		tar zxfv $c
+		tar zxfv $d
+		#On a donc deux dossiers que l'on peut comparer precisement 		
+		a=$a$separateur
+		b=$b$separateur		
 		diff -r $a $b
+		#On supprime nos archives, a discuter
+		rm -Rf $a
+		rm -Rf $b		
 		exit 0
 }
 
