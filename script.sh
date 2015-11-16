@@ -36,8 +36,8 @@ backup="backup_"
 	#chemin
 	#echo -e "full_path=$PWD$separateur$1$separateur$backup$current_hour \n" 
 	#redirection ambigu si pas de param
-	#full_path=$PWD$separateur$1$separateur$backup$current_hour
-	full_path=$separateur$backup$current_hour
+	full_path=$PWD$separateur$1$separateur$backup$current_hour
+	#full_path=$separateur$backup$current_hour
 	echo -e "Recuperation des dossiers de: $fichier_conf_nom \n"
 
 while read line
