@@ -33,13 +33,14 @@ backup="backup_"
     else
 	mkdir "$1"
     fi
-	#chemin 
+	#chemin
 	#echo -e "full_path=$PWD$separateur$1$separateur$backup$current_hour \n" 
 	#redirection ambigu si pas de param
-	full_path=$PWD$separateur$1$separateur$backup$current_hour
+	#full_path=$PWD$separateur$1$separateur$backup$current_hour
+	full_path=$separateur$backup$current_hour
 	echo -e "Recuperation des dossiers de: $fichier_conf_nom \n"
 
-while read line 
+while read line
     do
 	echo -e "copie de $line"
 	#find /home -type d -name $line -print
@@ -59,8 +60,10 @@ while read line
     done < $fichier_conf_nom
 
     echo "le backup est dans :" $1 "est il est crypté"
-    tar cvzf $1.tar.gz $1
-    crypte $1.tar.gz
+    #Tar l'interieur du
+    tar cvzf $full_path.tar.gz $full_path
+    crypte $full_path.tar.gz
+    rm -R -f $full_path
 
 }
 
@@ -81,10 +84,10 @@ function compareA(){
 }
 
 function compareB(){
-		echo test		
+		echo test
 		echo $a
 		b=$1
-		echo $b				
+		echo $b
 		diff -r $a $b
 		exit 0
 }
