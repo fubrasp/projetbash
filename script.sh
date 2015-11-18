@@ -64,7 +64,7 @@ while read line
     tar cvzf $full_path.tar.gz $full_path
     crypte $full_path.tar.gz
     rm -R -f $full_path
-#    rm -f $full_path.tar.gz
+    rm -f $full_path.tar.gz
 
 }
 
