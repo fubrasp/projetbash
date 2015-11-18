@@ -74,14 +74,31 @@ function recup(){
    fichier_conf_nom=$1
 }
 
+#On veut un seul tar.gz contenant toutes les backups
 #Apres relecture de l'enonce
-function tarCompressTout(){
-#on va a l'endroit indique
+function tarTout(){
+   #on va a l'endroit indique
+   cd $1
+   #nous avons seulement des dossiers de la forme backup_..
+   #on tar et compresse d'un coup toutes les backup
+   #Il va de soit que l'on a un seul mdp pour toutes les backups..
+   #existense du fichier tar avant
+   if [ ! -z "all_backups.tar" ]
+   then
+   tar -cvf all_backups.tar backup_*
+   #on supprime les dossiers du d'origine
+   rm -Rf backup_*
+   else
+   #on ajoute les dossiers au tar existant
+   tar -rvf all_backups.tar backup_*
+   rm -Rf backup_*
+   fi
+}
+
+function compressGZ(){
+#on va dans le dossier de backup
 cd $1
-#nous avons seulement des dossiers de la forme backup_..
-#on tar et compresse d'un coup toutes les backup
-#Il va de soit que l'on a un seul mdp pour toutes les backups..
-tar -zcvf all_backups.tar.gz *
+#TO DO
 }
 
 #Fonction qui crypte le backup
