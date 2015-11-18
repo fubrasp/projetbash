@@ -74,6 +74,16 @@ function recup(){
    fichier_conf_nom=$1
 }
 
+#Apres relecture de l'enonce
+function tarCompressTout(){
+#on va a l'endroit indique
+cd $1
+#nous avons seulement des dossiers de la forme backup_..
+#on tar et compresse d'un coup toutes les backup
+#Il va de soit que l'on a un seul mdp pour toutes les backups..
+tar -zcvf all_backups.tar.gz *
+}
+
 #Fonction qui crypte le backup
 function crypte(){
     gpg-zip -c -o $1.gpg $1
