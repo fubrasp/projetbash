@@ -37,14 +37,14 @@ backup="backup_"
 	#echo -e "full_path=$PWD$separateur$1$separateur$backup$current_hour \n" 
 	#redirection ambigu si pas de param
 	full_path=$PWD$separateur$1$separateur$backup$current_hour
-	#full_path=$separateur$backup$current_hour
+	#full_path=$backup$current_hour
 	echo -e "Recuperation des dossiers de: $fichier_conf_nom \n"
 
 while read line
     do
 	echo -e "copie de $line"
 	#find /home -type d -name $line -print
-	result=$(sudo find /home -type d -name $line)
+	result=$(sudo find  -type d -name $line)
 	if [ -z $result ]
 		then
 			echo "$fichier n'existe pas"
@@ -60,7 +60,7 @@ while read line
     done < $fichier_conf_nom
 
     echo "le backup est dans :" $1 "est il est crypté"
-    #Tar l'interieur du
+    #Tar l'interieur du $1
     tar cvzf $full_path.tar.gz $full_path
     crypte $full_path.tar.gz
     rm -R -f $full_path
