@@ -37,6 +37,7 @@ backup="backup_"
 	#echo -e "full_path=$PWD$separateur$1$separateur$backup$current_hour \n" 
 	#redirection ambigu si pas de param
 	full_path=$PWD$separateur$1$separateur$backup$current_hour
+	backup_name=$backup$current_hour
 	#full_path=$backup$current_hour
 	echo -e "Recuperation des dossiers de: $fichier_conf_nom \n"
 
@@ -61,10 +62,12 @@ while read line
 
     echo "le backup est dans :" $1 "est il est crypté"
     #Tar l'interieur du $1
-    tar cvzf $full_path.tar.gz $full_path
-    crypte $full_path.tar.gz
-    rm -R -f $full_path
-    rm -f $full_path.tar.gz
+    cd $1 
+    tar cvzf $backup_name.tar.gz $backup_name
+    crypte $backup_name.tar.gz
+    rm -R -f $backup_name
+    rm -f $backup_name.tar.gz
+    cd ..
 
 }
 
