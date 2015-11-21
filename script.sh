@@ -111,7 +111,11 @@ function crypte(){
     #TO DO
     #on suit les etapes que gpg indique
     #on s'indique soi meme comme destinataire
+    #le but est de voir si key contient rien il n'y a pas de cle
     key=$(gpg --list-keys)
+    #if [ ! $key="" ]
+    #then
+    #fi
     #si on a pas de clef, sinon on fait rien
 #NE FONCTIONNE PAS
     #test restrictif!!   
