@@ -106,7 +106,12 @@ cd $1
 
 #Fonction qui crypte le backup
 function crypte(){
-    gpg-zip -c -o $1.gpg $1
+    #gpg-zip -c -o $1.gpg $1
+    #il nous faut notre propre cle a la base
+    #TO DO
+    #on suit les etapes que gpg indique
+    #on s'indique soi meme comme destinataire
+    gpg --encrypt $1
 }
 
 #ces 2 fonctions sont pour le diff entre 2 backups
@@ -123,22 +128,17 @@ function compareB(){
 		#On decrypte les deux archives a comparer (diff)
 		gpg $a
 		gpg $b
-		#On fait un "basename" (on enleve les extension), un substring aurait ete plus propre..		
+		#On fait un "basename" (on enleve les extension .tar.gz.gpg), un substring aurait ete plus propre..		
 		a=$(echo "${a%%.*}")
 		b=$(echo "${b%%.*}")
-		#On concatene l'extension tar gz, on detare et decompresse		
+		#On concatene l'extension tar gz, on recherche seulement a savoir si c'est different en terme de contenu		
 		c=$a$extension
 		d=$b$extension
-		#On detare et decompresse, parce que un diff sur 2 archives stipule seulement leur difference sans etre precis
-		tar zxfv $c
-		tar zxfv $d
-		#On a donc deux dossiers que l'on peut comparer precisement 		
-		a=$a$separateur
-		b=$b$separateur		
-		diff -r $a $b
+		#on fait le diff
+		diff $c $d
 		#On supprime nos archives, a discuter
-		rm -Rf $a
-		rm -Rf $b		
+		rm -Rf $c
+		rm -Rf $d		
 		exit 0
 }
 
