@@ -111,6 +111,14 @@ function crypte(){
     #TO DO
     #on suit les etapes que gpg indique
     #on s'indique soi meme comme destinataire
+    key=$(gpg --list-keys)
+    #si on a pas de clef, sinon on fait rien
+#NE FONCTIONNE PAS
+    #test restrictif!!   
+#    if [ ! -z ../.gnupg/pubring.gpg ]
+#    then    
+#	gpg --gen-key
+    #fi
     gpg --encrypt $1
 }
 
