@@ -9,7 +9,7 @@ a=""
 function usage(){
     printf "Utilisation du script :\n"
     printf "\t--conf                   : lance le backup  \n"
-    printf "\t--backupdir               :indique l'endroit a mettre le backup"
+    printf "\t--backupdir               :indique l'endroit a mettre le backup \n"
     printf "\t-h                       : affiche ce message.\n"
 }
 
