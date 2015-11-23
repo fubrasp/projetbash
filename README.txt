@@ -8,3 +8,14 @@ Anthony : 19/11 : Je n'ai rien fait à part créer cette merde
 A faire : m'expliquer ce que je peux/dois faire.
 
 Kiss aux rageux !
+
+Guillaume : 23/11
+
+BOGUES:
+-Premier dossier copie present dans le fichier de configiuration (test2.txt) (premiere ligne du fichier):
+s'il contient des fichiers, il n'est pas copie en entier: seul ses sous dossiers et fichiers son copies
+
+-~~si on fait un --conf seul visiblement rien ne se passe, on ne peux pas imbriquer si je ne me trompe pas:
+./script --conf test2.txt
+./script --backupdir DOSSIER_BACKUP
+A Discuter: que faut-il afficher simplement l'usage?
