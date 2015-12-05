@@ -19,3 +19,5 @@ s'il contient des fichiers, il n'est pas copie en entier: seul ses sous dossiers
 ./script --conf test2.txt
 ./script --backupdir DOSSIER_BACKUP
 A Discuter: que faut-il afficher simplement l'usage?
+
+Visiblement la phrase secrete n'est plus demande, au cryptage.
