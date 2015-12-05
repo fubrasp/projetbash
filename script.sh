@@ -99,7 +99,8 @@ backup="backup_"
 	#full_path=$backup$current_hour
 	echo -e "Recuperation des dossiers de: $fichier_conf_nom \n"
 
-while read line
+files=$(cat  $fichier_conf_nom)
+for line in $files
     do
 	echo -e "copie de $line"
 	#find /home -type d -name $line -print
@@ -116,7 +117,7 @@ while read line
 			echo -e "\nORIGINE: $line"
 			echo -e "DESTINATION: $full_path"
 		fi
-    done < $fichier_conf_nom
+    done
 
     echo "le backup est dans :" $1 "est il est crypté"
     #Tar l'interieur du $1

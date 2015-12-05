@@ -23,3 +23,6 @@ A Discuter: que faut-il afficher simplement l'usage?
 
 A VOIR:
 Visiblement la phrase secrete n'est plus demande, au cryptage.
+
+PB de la boucle meme pb avec un for
+http://unix.stackexchange.com/questions/29214/copy-first-n-files-in-a-different-directory/29221
