@@ -16,6 +16,25 @@ function confexample(){
     echo ""
 }
 
+function autosupressbackup(){
+    #pour chaque dossier de backup on a un fichier les listant
+    limite_nb_fichiers=5
+    #limite_nb_fichiers=100
+    nom=listedesbackup
+    txt=".txt"
+    filename=$2$nom$txt
+    echo "$1" >> $filename
+    #on compte le nombre de backups dans le bon dossier
+    nb_fichiers=$(wc --words $filename  | cut -d ' ' -f1)
+    echo "NOMBRE DE FICHIERS $nb_fichiers dans $2"
+    if [ $nb_fichiers -eq $limite_nb_fichiers ]
+    then
+    backup_la_plus_ancienne=$(head -n 1 $filename)
+    cd $2
+    sudo rm -Rf $backup_la_plus_ancienne
+    cd ..
+    fi
+}
 
 #nom du fichier de configuration passe en parametre de, apres --backupdir
 #argument qui n'est pas passe, cela veut dire qu'on peut faire la commande en 2 fois, passage par defaut
@@ -107,8 +126,8 @@ while read line
     rm -R -f $backup_name
     rm -f $backup_name.tar.gz
     cd ..
-
-}
+    autosupressbackup $backup_name.tar.gz.gpg $1
+ }
 
 
 #Recupere le parametre du dossier principale
