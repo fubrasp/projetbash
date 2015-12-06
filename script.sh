@@ -1,6 +1,26 @@
 #!/bin/bash
 
+########VARIABLES DU SCRIPT########
+fichier_conf_nom=""
+########VARIABLES DU SCRIPT########
+
+########################USAGE########################
+#abscence d'arguments -> affichage de l'usage
+if [ $# -eq 0 ]
+then
+    usage
+fi
+########################USAGE########################
+
+
 #les fonctions doivent etre avant leurs appels
+function installpackages(){
+    #sudo apt-get install dialog
+    #dnf install dialog
+    #or yum install dialog
+    echo "http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script" 
+}
+
 function confexample(){
     echo ""
     fichier_conf_example="conf_exemple.txt"
@@ -14,6 +34,61 @@ function confexample(){
     printf "dossier1\ndossier2\ndossier3" > $fichier_conf_example
     echo "un exemple a ete cree dans $fichier_conf_example"
     echo ""
+}
+
+#lance que pour le backupdir ou le conf!!
+function verifconf(){
+    #nom du fichier de configuration passe en parametre de, apres --backupdir
+    #argument qui n'est pas passe, cela veut dire qu'on peut faire la commande en 2 fois, passage par defaut
+    if [ "$fichier_conf_nom" == "" ]
+    then
+        if [ ! -s save_CONF.txt ]
+        then
+            echo "Pas d'argument de conf, utilisation du passage par defaut"
+            fichier_conf_nom="test2.txt" 
+        fi
+    fi
+
+    #test de l'existance du parametre passe, le cas echeant passage par defaut
+    #if [ -e $fichiervide ]; then
+    #  echo "fichier existe"
+    #fi
+ 
+    #fichier non vide!
+    if [ -s save_CONF.txt ]
+    then
+        fichier_conf_nom=$(head -n 1 save_CONF.txt)
+        #fichier de conf vide!
+    else
+        echo "fichier de conf $1 vide!!"
+        echo "Recommencez avec un bon fichier de conf"
+        confexample
+        exit 1
+fi
+}
+
+function lire(){
+    #on va dans le dossier de backup
+    cd $2
+    ls
+    echo "regarder le dossier que vous voulez lire, rentrez le"
+    read dossier_voulu
+    extension=".tar.gz"
+    separateur="/"		
+    #On decrypte l'archive a lire
+    gpg $dossier_voulu
+    #On fait un "basename" (on enleve les extension .tar.gz.gpg), un substring aurait ete plus propre..		
+    a=$(echo "${1%%.*}")
+    echo "ARG LIRE BASENAME $a"
+    #On concatene l'extension tar gz		
+    c=$a$extension
+    #on decompresse
+    tar zxfv $c
+    cd $c
+    ls
+    cd .. 
+    #avec des dialog on peut faire naviguer le cas echeant
+    exit 0 
 }
 
 function autosupressbackup(){
@@ -32,37 +107,12 @@ function autosupressbackup(){
     backup_la_plus_ancienne=$(head -n 1 $filename)
     cd $2
     sudo rm -Rf $backup_la_plus_ancienne
+    #doit supprime l'entree sur le fichier c'est a dire la premiere ligne du fichier
+    sed -i '1d' $filename
     cd ..
     fi
 }
 
-#nom du fichier de configuration passe en parametre de, apres --backupdir
-#argument qui n'est pas passe, cela veut dire qu'on peut faire la commande en 2 fois, passage par defaut
-if [ "$3" == "" ]
-then
-    echo "Pas d'argument de conf, utilisation du passage par defaut"
-    fichier_conf_nom="test2.txt" 
-fi
-
-#test de l'existance du parametre passe, le cas echeant passage par defaut
-#if [ -e $fichiervide ]; then
-#  echo "fichier existe"
-#fi
-
-#fichier non vide!
-if [ -s $2 ]
-then
-    fichier_conf_nom=$2
-#fichier de conf vide!
-else
-    echo "fichier de conf $2 vide!!"
-    echo "Recommencez avec un bon fichier de conf"
-    confexample
-    exit 1
-fi
-
-#verification pour le backup
-a=""
 #usage, explications 
 function usage(){
     printf "Utilisation du script :\n"
@@ -71,16 +121,12 @@ function usage(){
     printf "\t-h                       : affiche ce message.\n"
 }
 
-#abscence d'arguments -> affichage de l'usage
-if [ $# -eq 0 ]
-then
-    usage
-fi
-
 #fonction de backup
 #creer un dossier pour les backup
 #copier les dossiers mentionnes dans le fichier de configuration (prealablement edites)
 function backup(){
+echo "BACKUP PASSAGE VERICONF $1 $3" 
+verifconf $1 $3
 backup="backup_"
 	current_hour=$(date +%Y%H%M%S)
 	separateur="/"
@@ -134,6 +180,7 @@ for line in $files
 #Recupere le parametre du dossier principale
 function recup(){
    fichier_conf_nom=$1
+   echo "$fichier_conf_nom" > save_CONF.txt
 }
 
 #On veut un seul tar.gz contenant toutes les backups
@@ -182,6 +229,7 @@ function crypte(){
 #    then    
 #	gpg --gen-key
     #fi
+    echo $1
     gpg --encrypt $1
 }
 
@@ -212,9 +260,8 @@ function compareB(){
 		rm -Rf $d		
 		exit 0
 }
-
 #Cette partie gere les arguments et lance la bonne méthode
-OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB -- "$@" )
+OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire -- "$@" )
 if [ $? != 0 ]
 then
     exit 1
@@ -226,9 +273,10 @@ while true ; do
         -h) usage;
             exit 0;;
         --conf) recup $2; shift 2;;
-	--backupdir) backup $2; shift 2;;
+	--backupdir) backup $2 $3; shift 2;;
 	--compA) compareA $2; shift 2;;
 	--compB) compareB $3; shift 2;;
+        --lire) lire $2 $3; shift 2;;
         --) shift; break;;
     esac
 done
