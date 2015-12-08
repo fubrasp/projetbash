@@ -71,20 +71,21 @@ function lire(){
     #on va dans le dossier de backup
     cd $2
     ls
-    echo "regarder le dossier que vous voulez lire, rentrez le"
+    echo "regarder le dossier(gpg) que vous voulez lire, rentrez le"
     read dossier_voulu
     extension=".tar.gz"
     separateur="/"		
     #On decrypte l'archive a lire
     gpg $dossier_voulu
     #On fait un "basename" (on enleve les extension .tar.gz.gpg), un substring aurait ete plus propre..		
-    a=$(echo "${1%%.*}")
+    a=$(echo "${dossier_voulu%%.*}")
     echo "ARG LIRE BASENAME $a"
     #On concatene l'extension tar gz		
     c=$a$extension
     #on decompresse
     tar zxfv $c
-    cd $c
+    cd $a
+    echo "l'archive voulue contient"
     ls
     cd .. 
     #avec des dialog on peut faire naviguer le cas echeant
