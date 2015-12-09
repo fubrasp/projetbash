@@ -2,6 +2,8 @@
 
 ########VARIABLES DU SCRIPT########
 fichier_conf_nom=""
+FICHIER_CONF_DEFAUT="test2.txt"
+FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 ########VARIABLES DU SCRIPT########
 
 ########################USAGE########################
@@ -38,40 +40,29 @@ function confexample(){
 
 #lance que pour le backupdir ou le conf!!
 function verifconf(){
-    ###PROVISOIRE###
-    for testparam in $*
-    do
-    echo "ARG VERIFCONF $testparam" 
-    done
-
     #nom du fichier de configuration passe en parametre de, apres --backupdir
     #argument qui n'est pas passe, cela veut dire qu'on peut faire la commande en 2 fois, passage par defaut
     if [ "$fichier_conf_nom" == "" ]
     then
-        if [ ! -s save_CONF.txt ]
-        then
-            echo "Pas d'argument de conf, utilisation du passage par defaut"
-            fichier_conf_nom="test2.txt" 
-        fi
+    	fichier_conf_nom=$FICHIER_CONF_DEFAUT
     fi
 
-    #test de l'existance du parametre passe, le cas echeant passage par defaut
-    if [ ! -e $(cat save_CONF.txt) ]; then
-      echo "fichier de conf n'existe pas!!"
+    #test de l'existance du parametre passe
+    if [ ! -e $(cat $FICHIER_SAUVEGARDE_CONFIG) ]; then
+      echo "Fichier de conf n'existe pas!!"
+      confexample
       exit 1
     fi
  
-    #fichier non vide!
-    if [ -s save_CONF.txt ]
-    then
-        fichier_conf_nom=$(head -n 1 save_CONF.txt)
-        #fichier de conf vide!
-    else
-        echo "fichier de conf $1 vide!!"
-        echo "Recommencez avec un bon fichier de conf"
-        confexample
-        exit 1
-fi
+    #fichier vide
+    if [ ! -s $(cat $FICHIER_SAUVEGARDE_CONFIG) ]
+        then
+            echo "Fichier de conf $FICHIER_SAUVEGARDE_CONFIG existant mais vide!!"
+            confexample
+	    exit 1
+        else
+            fichier_conf_nom=$(head -n 1 $FICHIER_SAUVEGARDE_CONFIG)        
+    fi
 }
 
 function lire(){

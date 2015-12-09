@@ -15,11 +15,7 @@ BOGUES:
 -Premier dossier copie present dans le fichier de configiuration (test2.txt) (premiere ligne du fichier):
 s'il contient des fichiers, il n'est pas copie en entier: seul ses sous dossiers et fichiers son copies
 
-PROBLEME TRAITE (a bien verifier):
--~~si on fait un --conf seul visiblement rien ne se passe, on ne peux pas imbriquer si je ne me trompe pas:
-./script --conf test2.txt
-./script --backupdir DOSSIER_BACKUP
-A Discuter: que faut-il afficher simplement l'usage?
+
 
 A VOIR:
 Visiblement la phrase secrete n'est plus demande, au cryptage.
@@ -31,3 +27,26 @@ On remarquera un comportement très étrange si on laisse pas un deuxième argum
 
 le but est de rendre plus propre le tout notamment les tests pour les fichiers de conf..
 tester tous les cas d'erreurs..
+
+
+PROBLEME TRAITES (a bien verifier):
+
+-~~si on fait un --conf seul visiblement rien ne se passe, on ne peux pas imbriquer si je ne me trompe pas:
+./script --conf test2.txt
+./script --backupdir DOSSIER_BACKUP
+
+Si on passe un fichier de conf inexistant genre text3.txt on a une erreur
+Si on passe un fichier de conf mais avec rien dedans on a une erreur
+Si on passe un fichier de conf dans un premier temps:
+./script --conf text2.txt
+puis on fait le backup après
+./script --backupdir OK
+cela fonctionne
+si on passe
+./script --conf test2.txt --backupdir OK
+cela fonctionne aussi
+
+Le cas du: on mets n'importe quoi dans le fichier de conf n'est pas traite
+
+on un usage pour le fichier de conf en quelque sorte (si la personne se trompe ça s'affiche)
+
