@@ -38,6 +38,12 @@ function confexample(){
 
 #lance que pour le backupdir ou le conf!!
 function verifconf(){
+    ###PROVISOIRE###
+    for testparam in $*
+    do
+    echo "ARG VERIFCONF $testparam" 
+    done
+
     #nom du fichier de configuration passe en parametre de, apres --backupdir
     #argument qui n'est pas passe, cela veut dire qu'on peut faire la commande en 2 fois, passage par defaut
     if [ "$fichier_conf_nom" == "" ]
@@ -50,9 +56,10 @@ function verifconf(){
     fi
 
     #test de l'existance du parametre passe, le cas echeant passage par defaut
-    #if [ -e $fichiervide ]; then
-    #  echo "fichier existe"
-    #fi
+    if [ ! -e $(cat save_CONF.txt) ]; then
+      echo "fichier de conf n'existe pas!!"
+      exit 1
+    fi
  
     #fichier non vide!
     if [ -s save_CONF.txt ]
@@ -126,8 +133,9 @@ function usage(){
 #creer un dossier pour les backup
 #copier les dossiers mentionnes dans le fichier de configuration (prealablement edites)
 function backup(){
-echo "BACKUP PASSAGE VERICONF $1 $3" 
-verifconf $1 $3
+#echo "BACKUP PASSAGE VERICONF $1 $3" 
+
+verifconf $1 
 backup="backup_"
 	current_hour=$(date +%Y%H%M%S)
 	separateur="/"
@@ -274,7 +282,7 @@ while true ; do
         -h) usage;
             exit 0;;
         --conf) recup $2; shift 2;;
-	--backupdir) backup $2 $3; shift 2;;
+	--backupdir) backup $2; shift 2;;
 	--compA) compareA $2; shift 2;;
 	--compB) compareB $3; shift 2;;
         --lire) lire $2 $3; shift 2;;
