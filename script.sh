@@ -6,21 +6,58 @@ FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 ########VARIABLES DU SCRIPT########
 
-########################USAGE########################
+#usage, explications 
+function usage(){
+    printf "Utilisation du script :\n"
+    #printf "\t--conf                  : lance le backup  \n"
+    printf "\t--install                : installe les depandes suivant votre systeme type unix"
+    printf "\t--conf                   : choisit le fichier de configuration  \n"
+    printf "\t--backupdir              : indique l'endroit a mettre le backup \n"
+    printf "\t--lire                   : lire un dossier de backup revient a faire un ls après avoir decrypte et desarchive  \n"
+    printf "\t-h                       : affiche ce message.\n"
+}
+
+########################TEST USAGE########################
 #abscence d'arguments -> affichage de l'usage
-if [ $# -eq 0 ]
-then
+if [ $# -eq 0 ]; then
     usage
 fi
-########################USAGE########################
+########################TEST USAGE########################
 
-
-#les fonctions doivent etre avant leurs appels
+#installation des divers packages
+#plus important le cas de levinux
 function installpackages(){
-    #sudo apt-get install dialog
-    #dnf install dialog
-    #or yum install dialog
-    echo "http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script" 
+echo "http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script"
+#ce n'est probablement complet!!    
+OS=$(uname)
+case $OS in
+  'Linux')
+    #test l'existence du chemin pour les rpm
+    /usr/bin/rpm -q -f /usr/bin/rpm
+    res=$($?)
+    if [ $res -eq 0 ]
+    then
+        #les distros avec packages rpm peuvent gerer les deb aussi
+        OS='RPM based Linux'
+        sudo dnf install dialog
+    else
+	#inutile sur une ubuntu de base en desktop
+        OS="DEB based Linux"
+	sudo apt-get install dialog
+    fi
+    ;;
+  'FreeBSD')
+    OS='FreeBSD'
+    #je ne sais pas s'il existe sur FreeBSD
+    pkg install dialog 
+    ;;
+  'Darwin') 
+    OS='Mac'
+    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+    brew install dialog
+    ;;
+  *) ;;
+esac 
 }
 
 function confexample(){
@@ -65,8 +102,25 @@ function verifconf(){
     fi
 }
 
+function veriflire(){
+#ne pas chercher a modifier l'ordre des deux tests
+if [ -z $1 ]; then
+   echo "vous devez passer un dossier à --lire:"
+   usage
+   exit 1	
+fi
+
+if [ ! -d "$1" ]; then
+   echo "dossier renseigne inexistant!!"
+   exit 1
+fi
+
+
+}
+
 function lire(){
     #on va dans le dossier de backup
+    veriflire $2
     cd $2
     ls
     echo "regarder le dossier(gpg) que vous voulez lire, rentrez le"
@@ -110,14 +164,6 @@ function autosupressbackup(){
     sed -i '1d' $filename
     cd ..
     fi
-}
-
-#usage, explications 
-function usage(){
-    printf "Utilisation du script :\n"
-    printf "\t--conf                   : lance le backup  \n"
-    printf "\t--backupdir               :indique l'endroit a mettre le backup \n"
-    printf "\t-h                       : affiche ce message.\n"
 }
 
 #fonction de backup
@@ -277,6 +323,7 @@ while true ; do
 	--compA) compareA $2; shift 2;;
 	--compB) compareB $3; shift 2;;
         --lire) lire $2 $3; shift 2;;
+	--install) installpackages; shift 2;;
         --) shift; break;;
     esac
 done
