@@ -14,6 +14,7 @@ function usage(){
     printf "\t--conf                   : choisit le fichier de configuration  \n"
     printf "\t--backupdir              : indique l'endroit a mettre le backup \n"
     printf "\t--lire                   : lire un dossier de backup revient a faire un ls après avoir decrypte et desarchive  \n"
+    printf "\t--conf fichierConf.txt --backupdir dossierDeStockageBackups "
     printf "\t-h                       : affiche ce message.\n"
 }
 
@@ -22,6 +23,8 @@ function usage(){
 if [ $# -eq 0 ]; then
     usage
 fi
+
+#le test de l'ordre des arguments ne marche pas
 ########################TEST USAGE########################
 
 #installation des divers packages
@@ -39,11 +42,11 @@ case $OS in
     then
         #les distros avec packages rpm peuvent gerer les deb aussi
         OS='RPM based Linux'
-        sudo dnf install dialog
+        sudo dnf install dialog gpg
     else
 	#inutile sur une ubuntu de base en desktop
         OS="DEB based Linux"
-	sudo apt-get install dialog
+	sudo apt-get install dialog gpg
     fi
     ;;
   'FreeBSD')
@@ -112,6 +115,9 @@ fi
 
 if [ ! -d "$1" ]; then
    echo "dossier renseigne inexistant!!"
+   if [ -f "$1" ]; then
+   echo "il s'agit d'un fichier!!"
+   fi
    exit 1
 fi
 
