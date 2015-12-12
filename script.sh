@@ -14,6 +14,7 @@ function usage(){
     printf "\t--conf                   : choisit le fichier de configuration  \n"
     printf "\t--backupdir              : indique l'endroit a mettre le backup \n"
     printf "\t--lire                   : lire un dossier de backup revient a faire un ls après avoir decrypte et desarchive  \n"
+    printf "\t--supp                   : supprime proprement un dossier de backup \n" 
     printf "\t--conf fichierConf.txt --backupdir dossierDeStockageBackups "
     printf "\t-h                       : affiche ce message.\n"
 }
@@ -172,6 +173,22 @@ function autosupressbackup(){
     fi
 }
 
+function supressbackup(){
+    sudo rm -f $1
+    nom=listedesbackup
+    txt=".txt"
+    sup=$(dirname $1)    
+    file=$(basename $1)
+    filename=$sup$nom$txt
+    dol="/$"
+    d="/d"
+    a_sup=$dol$file$d
+    sed $a_sup $filename
+    grep -v $file $filename > /tmp/BASHscript.txt
+    cat /tmp/BASHscript.txt > $filename
+    exit 0
+}
+
 #fonction de backup
 #creer un dossier pour les backup
 #copier les dossiers mentionnes dans le fichier de configuration (prealablement edites)
@@ -235,33 +252,6 @@ function recup(){
    echo "$fichier_conf_nom" > save_CONF.txt
 }
 
-#On veut un seul tar.gz contenant toutes les backups
-#Apres relecture de l'enonce
-function tarTout(){
-   #on va a l'endroit indique
-   cd $1
-   #nous avons seulement des dossiers de la forme backup_..
-   #on tar et compresse d'un coup toutes les backup
-   #Il va de soit que l'on a un seul mdp pour toutes les backups..
-   #existense du fichier tar avant
-   if [ ! -z "all_backups.tar" ]
-   then
-   tar -cvf all_backups.tar backup_*
-   #on supprime les dossiers du d'origine
-   rm -Rf backup_*
-   else
-   #on ajoute les dossiers au tar existant
-   tar -rvf all_backups.tar backup_*
-   rm -Rf backup_*
-   fi
-}
-
-function compressGZ(){
-#on va dans le dossier de backup
-cd $1
-#TO DO
-}
-
 #Fonction qui crypte le backup
 function crypte(){
     #gpg-zip -c -o $1.gpg $1
@@ -307,13 +297,19 @@ function compareB(){
 		d=$b$extension
 		#on fait le diff
 		diff $c $d
+                if [ "$c" -ot "$d" ]
+                   then
+                       echo "$c est plus ancien que $d"
+                   else
+                       echo "$c est plus recent que $d"
+                fi
 		#On supprime nos archives, a discuter
 		rm -Rf $c
 		rm -Rf $d		
 		exit 0
 }
 #Cette partie gere les arguments et lance la bonne méthode
-OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire -- "$@" )
+OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire,supp, -- "$@" )
 if [ $? != 0 ]
 then
     exit 1
@@ -329,6 +325,7 @@ while true ; do
 	--compA) compareA $2; shift 2;;
 	--compB) compareB $3; shift 2;;
         --lire) lire $2 $3; shift 2;;
+        --supp) supressbackup $3; shift 2;;
 	--install) installpackages; shift 2;;
         --) shift; break;;
     esac

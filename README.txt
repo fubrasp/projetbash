@@ -18,16 +18,23 @@ s'il contient des fichiers, il n'est pas copie en entier: seul ses sous dossiers
 
 
 A VOIR:
-Visiblement la phrase secrete n'est plus demande, au cryptage.
 
 PB de la boucle meme pb avec un for
 http://unix.stackexchange.com/questions/29214/copy-first-n-files-in-a-different-directory/29221
 
 On remarquera un comportement très étrange si on laisse pas un deuxième argument dans la recuperation des opts avec lire
 
+le test des arguments est fastidieux
+
 le but est de rendre plus propre le tout notamment les tests pour les fichiers de conf..
 tester tous les cas d'erreurs..
+certains sont testes d'autres il est tres difficile
+si dialog en faire un pour la lecture serait l'ideal
 
+#####IMPORTANT#####
+Kevin Araba a fait une tres bonne remarque il ne faut pas copier les dossiers mais faire une archive en utilisant leurs chemins, au niveau perf ca doit etre pourri
+Droits sur les backup!!
+#####IMPORTANT#####
 
 PROBLEME TRAITES (a bien verifier):
 
@@ -50,3 +57,4 @@ Le cas du: on mets n'importe quoi dans le fichier de conf n'est pas traite
 
 on un usage pour le fichier de conf en quelque sorte (si la personne se trompe ça s'affiche)
 
+plus de pb de phrase secrete visiblement
