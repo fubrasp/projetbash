@@ -23,29 +23,31 @@ function usage(){
 #installation des divers packages
 #plus important le cas de levinux
 function installpackages(){
-#ce n'est probablement complet!!    
+echo "***INSTALLATION AUTOMATIQUE***"
+#ce n'est probablement pas complet!!    
 OS=$(uname)
 echo "MON SYSTEME EST UN $OS"
 case $OS in
   'Linux')
     #test l'existence du chemin pour les rpm
-    res=$(/usr/bin/rpm -q -f /usr/bin/rpm)
+    res=$(/usr/bin/rpm -q -f /usr/bin/rpm 2> /dev/null)
     if [[ $res == *"rpm"* ]]
     then
         #les distros avec packages rpm peuvent gerer les deb aussi
+        #hqbituellement les distros fedora sont changes souvent, pour les les redhat..
         OS='RPM based Linux'
-        sudo dnf install dialog gpg
+        sudo dnf install dialog gnupg
     else
 	#inutile sur une ubuntu de base en desktop
         OS="DEB based Linux"
-	sudo apt-get install dialog gpg
+	sudo apt-get install dialog gnupg
     fi
     #FAIRE l'init de GPG
     ;;
   'FreeBSD')
     OS='FreeBSD'
     #je ne sais pas s'il existe sur FreeBSD
-    pkg install dialog gpg
+    pkg install dialog gnupg
     #FAIRE l'init de GPG 
     ;;
    #cas non verifie
