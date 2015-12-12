@@ -34,6 +34,8 @@ si dialog en faire un pour la lecture serait l'ideal
 #####IMPORTANT#####
 Kevin Araba a fait une tres bonne remarque il ne faut pas copier les dossiers mais faire une archive en utilisant leurs chemins, au niveau perf ca doit etre pourri
 Droits sur les backup!!
+pour tce-load visiblement le script ne marche pas?
+faire l'init de gpg..
 #####IMPORTANT#####
 
 PROBLEME TRAITES (a bien verifier):
