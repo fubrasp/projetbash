@@ -24,7 +24,15 @@ function usage(){
 #plus important le cas de levinux
 function installpackages(){
 echo "***INSTALLATION AUTOMATIQUE***"
-#ce n'est probablement pas complet!!    
+#ce n'est probablement pas complet!!
+#levinux
+osdef=$(uname -a)
+#a completer mieux le match
+if [[ $osdef == *"tiny"* ]]; then
+tce-load dialog gnupg
+exit 0
+fi
+    
 OS=$(uname)
 echo "MON SYSTEME EST UN $OS"
 case $OS in
@@ -35,24 +43,24 @@ case $OS in
     then
         #les distros avec packages rpm peuvent gerer les deb aussi
         #hqbituellement les distros fedora sont changes souvent, pour les les redhat..
-        OS='RPM based Linux'
+        #OS='RPM based Linux'
         sudo dnf install dialog gnupg
     else
 	#inutile sur une ubuntu de base en desktop
-        OS="DEB based Linux"
+        #OS="DEB based Linux"
 	sudo apt-get install dialog gnupg
     fi
     #FAIRE l'init de GPG
     ;;
   'FreeBSD')
-    OS='FreeBSD'
+    #OS='FreeBSD'
     #je ne sais pas s'il existe sur FreeBSD
     pkg install dialog gnupg
     #FAIRE l'init de GPG 
     ;;
    #cas non verifie
   'Darwin') 
-    OS='Mac'
+    #OS='Mac'
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
     brew install dialog gpg
     ;;
