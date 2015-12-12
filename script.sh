@@ -6,6 +6,7 @@ FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
+MAIN_SYNOPSIS_WEBPAGE="https://daenerys.xplod.fr/synopsis.php"
 REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
 ########VARIABLES DU SCRIPT########
 
@@ -349,13 +350,41 @@ function downfile(){
    exit 0
 }
 
-#ne fonctionne pas!!!
+function recupsynops(){
+   #dans un premier vu que c'est au fur et a mesure on doit traiter la page principale (on ne peut pas utiliser les cas d'erreurs vu la conf du site)
+   curl -O $MAIN_SYNOPSIS_WEBPAGE
+   grep "Season" synopsis.php > /tmp/Season.txt
+   grep "Episode" synopsis.php > /tmp/Episodes.txt
+   sed -e 's/Season//g' /tmp/Season.txt > /tmp/testS.txt
+   sed -e 's/<[^>]*>//g' /tmp/testS.txt > /tmp/testS2.txt
+   #on part du principe ou les synopsys sont ordonnes!
+   cat /tmp/testS2.txt | tail -1 > /tmp/withspaces.txt
+   sed 's/ //g' /tmp/withspaces.txt > /tmp/no-spaces.txt
+   nb_synopsys=$(cat /tmp/no-spaces.txt)
+   echo "NB Seasons $nb_synopsys"
+
+   grep "Episode" synopsis.php > /tmp/testE.txt
+   sed -e 's/<[^>]*>//g' /tmp/testE.txt > /tmp/testE2.txt
+   sed -e 's/Episode//g' /tmp/testE2.txt > /tmp/testE3.txt
+   sed -i '1d' /tmp/testE3.txt
+   cat /tmp/testE3.txt | awk -F':' '{print $1}' > /tmp/Efinal.txt
+   max="0"
+   while read line
+   do
+   if [ "$max" -lt "$line" ]; then
+      max=$line
+   fi
+   done < /tmp/Efinal.txt
+   echo "NB max episodes $max"
+}
+
+
 function upbackup(){
    curl -F "file=@test2.txt;filename=$1" $ADRESSE_BACKUP_SITE 
    exit 0
 }
 #Cette partie gere les arguments et lance la bonne méthode
-OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire,supp,installer,uploadbck,dwnfile, -- "$@" )
+OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire,supp,installer,uploadbck,dwnfile,recupallsynops, -- "$@" )
 if [ $? != 0 ]
 then
     exit 1
@@ -373,6 +402,7 @@ while true ; do
         --lire) lire $2 $3; shift 2;;
         --uploadbck) upbackup $3; shift 2;;
         --dwnfile) downfile $3; shift 2;;
+        --recupallsynops) recupsynops; shift 2;;
         --supp) supressbackup $3; shift 2;;
 	--installer) installpackages; shift 2;;
         --) shift; break;;
