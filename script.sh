@@ -380,7 +380,7 @@ function recupsynops(){
 
 
 function upbackup(){
-   curl -F "file=@test2.txt;filename=$1" $ADRESSE_BACKUP_SITE 
+   curl -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
    exit 0
 }
 #Cette partie gere les arguments et lance la bonne méthode
