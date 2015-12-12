@@ -4,6 +4,7 @@
 fichier_conf_nom=""
 FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
+FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
 ########VARIABLES DU SCRIPT########
 
 #usage, explications 
@@ -19,27 +20,17 @@ function usage(){
     printf "\t-h                       : affiche ce message.\n"
 }
 
-########################TEST USAGE########################
-#abscence d'arguments -> affichage de l'usage
-if [ $# -eq 0 ]; then
-    usage
-fi
-
-#le test de l'ordre des arguments ne marche pas
-########################TEST USAGE########################
-
 #installation des divers packages
 #plus important le cas de levinux
 function installpackages(){
-echo "http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script"
 #ce n'est probablement complet!!    
 OS=$(uname)
+echo "MON SYSTEME EST UN $OS"
 case $OS in
   'Linux')
     #test l'existence du chemin pour les rpm
-    /usr/bin/rpm -q -f /usr/bin/rpm
-    res=$($?)
-    if [ $res -eq 0 ]
+    res=$(/usr/bin/rpm -q -f /usr/bin/rpm)
+    if [[ $res == *"rpm"* ]]
     then
         #les distros avec packages rpm peuvent gerer les deb aussi
         OS='RPM based Linux'
@@ -49,20 +40,41 @@ case $OS in
         OS="DEB based Linux"
 	sudo apt-get install dialog gpg
     fi
+    #FAIRE l'init de GPG
     ;;
   'FreeBSD')
     OS='FreeBSD'
     #je ne sais pas s'il existe sur FreeBSD
-    pkg install dialog 
+    pkg install dialog gpg
+    #FAIRE l'init de GPG 
     ;;
+   #cas non verifie
   'Darwin') 
     OS='Mac'
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
-    brew install dialog
+    brew install dialog gpg
     ;;
   *) ;;
 esac 
 }
+
+########################TEST USAGE########################
+#abscence d'arguments -> affichage de l'usage
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+#lancement de l'install au premier lancement
+if [ ! -e $FICHIER_TEST_INSTALLATION ]; then
+    echo "install realisee" > $FICHIER_TEST_INSTALLATION
+    installpackages
+    echo "maintenant vous pouvez relancer la commande l'installation des dependances est realisee"
+    exit 0
+fi
+
+#le test de l'ordre des arguments ne marche pas
+########################TEST USAGE########################
+
 
 function confexample(){
     echo ""
