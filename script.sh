@@ -5,7 +5,7 @@ fichier_conf_nom=""
 FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
-ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=<bertrandcerfruez>"
+ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
 REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
 ########VARIABLES DU SCRIPT########
 
@@ -351,9 +351,7 @@ function downfile(){
 
 #ne fonctionne pas!!!
 function upbackup(){
-   echo "ne fonctionne pas" 
-   echo "curl -i --request POST https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez --data "file=@test2.txt""
-   #curl --request POST $ADRESSE_BACKUP_SITE --data "path=$1"
+   curl -F "file=@test2.txt;filename=$1" $ADRESSE_BACKUP_SITE 
    exit 0
 }
 #Cette partie gere les arguments et lance la bonne méthode
