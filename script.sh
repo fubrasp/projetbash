@@ -5,16 +5,19 @@ fichier_conf_nom=""
 FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
+ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=<bertrandcerfruez>"
+REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
 ########VARIABLES DU SCRIPT########
 
 #usage, explications 
 function usage(){
     printf "Utilisation du script :\n"
     #printf "\t--conf                  : lance le backup  \n"
-    printf "\t--install                : installe les depandes suivant votre systeme type unix"
+    printf "\t--installer                : installe les depandes suivant votre systeme type unix"
     printf "\t--conf                   : choisit le fichier de configuration  \n"
     printf "\t--backupdir              : indique l'endroit a mettre le backup \n"
     printf "\t--lire                   : lire un dossier de backup revient a faire un ls après avoir decrypte et desarchive  \n"
+    printf "\t--uploadbck              : iploader un dossier de backup \n"      
     printf "\t--supp                   : supprime proprement un dossier de backup \n" 
     printf "\t--conf fichierConf.txt --backupdir dossierDeStockageBackups "
     printf "\t-h                       : affiche ce message.\n"
@@ -330,8 +333,31 @@ function compareB(){
 		rm -Rf $d		
 		exit 0
 }
+
+
+function downfile(){
+   echo "ARG $1"
+   if [ -d $REPERTOIRE_FICHIERS_TELECHARGES ]
+   then
+      mkdir $REPERTOIRE_FICHIERS_TELECHARGES
+      cd $REPERTOIRE_FICHIERS_TELECHARGES
+   else
+      cd $REPERTOIRE_FICHIERS_TELECHARGES
+   fi
+   curl -O $1
+   cd ..
+   exit 0
+}
+
+#ne fonctionne pas!!!
+function upbackup(){
+   echo "ne fonctionne pas" 
+   echo "curl -i --request POST https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez --data "file=@test2.txt""
+   #curl --request POST $ADRESSE_BACKUP_SITE --data "path=$1"
+   exit 0
+}
 #Cette partie gere les arguments et lance la bonne méthode
-OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire,supp, -- "$@" )
+OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire,supp,installer,uploadbck,dwnfile, -- "$@" )
 if [ $? != 0 ]
 then
     exit 1
@@ -347,8 +373,10 @@ while true ; do
 	--compA) compareA $2; shift 2;;
 	--compB) compareB $3; shift 2;;
         --lire) lire $2 $3; shift 2;;
+        --uploadbck) upbackup $3; shift 2;;
+        --dwnfile) downfile $3; shift 2;;
         --supp) supressbackup $3; shift 2;;
-	--install) installpackages; shift 2;;
+	--installer) installpackages; shift 2;;
         --) shift; break;;
     esac
 done
