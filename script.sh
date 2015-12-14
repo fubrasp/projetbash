@@ -6,6 +6,7 @@ FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
+ADRESSE_DW_BACKUP_SITE="https://daenerys.xplod.fr/backup/download.php?login=bertrandcerfruez&hash="
 MAIN_SYNOPSIS_WEBPAGE="https://daenerys.xplod.fr/synopsis.php"
 ADRESSE_RELATIVE_WEBSITE="https://daenerys.xplod.fr/"
 REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
@@ -19,7 +20,8 @@ function usage(){
     printf "\t--conf                   : choisit le fichier de configuration  \n"
     printf "\t--backupdir              : indique l'endroit a mettre le backup \n"
     printf "\t--lire                   : lire un dossier de backup revient a faire un ls après avoir decrypte et desarchive  \n"
-    printf "\t--uploadbck              : iploader un dossier de backup \n"      
+    printf "\t--uploadbck              : uploader un dossier de backup \n"
+    printf "\t--dwbackup               : download d'une backup a partir de son hash"     
     printf "\t--supp                   : supprime proprement un dossier de backup \n" 
     printf "\t--conf fichierConf.txt --backupdir dossierDeStockageBackups "
     printf "\t-h                       : affiche ce message.\n"
@@ -413,6 +415,7 @@ if [ ! -d $supersynops ];then
 mkdir $supersynops
 fi
 
+txt=".txt"
 supsyn="supsyn.php"
 pre="?s="
 post="&e="
@@ -446,22 +449,57 @@ curl $MAIN_SYNOPSIS_WEBPAGE$pre$s$post$e > $synops_doss$sep$page_stock$s$e$php
 curl $ADRESSE_RELATIVE_WEBSITE$supsyn$pre$s$post$e > $supersynops$sep$supsynstock$underscore$s$underscore$e$extsupsyn 
 fi
 fi
-
-#mettre en txt que le synopsys des pages.php
-
- 
 done
+
+files="*"
+point="."
+params=$point$sep$synops_doss$sep$files
+echo "FICHIERS $params"
+#mettre en txt que le synopsys des pages.php
+#inutile normallement 
+
+
+#IFS=$'\n'
+#regex_p="<p[^>]*>.*?<\/p>"
+#cd SYNOPS
+#for line in SYNOPS/*.php
+#do
+# [[ $line =~ $regex_p ]]
+# p="${BASH_REMATCH[0]}"
+# echo "PARAGRAPH $p"
+#if [ "$p" != "" ]; then
+# echo "PARAGRAPH $p"
+#fi
+#echo $line
+#cat $line
+#done
+
+
+echo "$line $synops_doss$sep$page_stock$s$e$txt"
+sed 's/<p[^>]*>.*?<\/p>//g' $line > $synops_doss$sep$page_stock$s$e$txt
+
 
 exit 0
 }
 
-#il faut aussi permettre de download un fichier uploade avant
+function downbackup(){
+#on concatene le hash
+#result_request=$(curl -i $ADRESSE_DW_BACKUP_SITE$1)
+#curl -i $ADRESSE_DW_BACKUP_SITE$1 > test.txt
+#curl -O $name $ADRESSE_DW_BACKUP_SITE$1
+url=$ADRESSE_DW_BACKUP_SITE$1
+filename=$(curl -sI  $url | grep -o -E 'filename=.*$' | sed -e 's/filename=//' | sed -e 's/"//' | sed -e 's/"//')
+echo "FICHIER $filename"
+curl -o $filename -L $url
+exit 0
+}
+
 function upbackup(){
    curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
    exit 0
 }
 #Cette partie gere les arguments et lance la bonne méthode
-OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire,supp,installer,uploadbck,dwnfile,recupallsynops, -- "$@" )
+OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire,supp,installer,uploadbck,dwnfile,recupallsynops,dwbackup, -- "$@" )
 if [ $? != 0 ]
 then
     exit 1
@@ -478,6 +516,7 @@ while true ; do
 	--compB) compareB $3; shift 2;;
         --lire) lire $2 $3; shift 2;;
         --uploadbck) upbackup $3; shift 2;;
+        --dwbackup) downbackup $3; shift 2;;
         --dwnfile) downfile $3; shift 2;;
         --recupallsynops) recupsynops; shift 2;;
         --supp) supressbackup $3; shift 2;;
