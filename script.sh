@@ -427,7 +427,7 @@ else
 if [ "$episodes" != "" ]; then
 echo $episodes
 e=$episodes
-curl $MAIN_SYNOPSIS_WEBPAGE$pre$seasons$post$episodes > $page_stock$s$e$php
+curl $MAIN_SYNOPSIS_WEBPAGE$pre$s$post$e > $page_stock$s$e$php
 fi
 fi
 
