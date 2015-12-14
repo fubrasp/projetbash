@@ -351,36 +351,83 @@ function downfile(){
 }
 
 function recupsynops(){
+
+   #STR ?s=1&e=1
+   #pour les episodes il faut trouver une meilleure solution
    #dans un premier vu que c'est au fur et a mesure on doit traiter la page principale (on ne peut pas utiliser les cas d'erreurs vu la conf du site)
    curl -O $MAIN_SYNOPSIS_WEBPAGE
-   grep "Season" synopsis.php > /tmp/Season.txt
-   grep "Episode" synopsis.php > /tmp/Episodes.txt
-   sed -e 's/Season//g' /tmp/Season.txt > /tmp/testS.txt
-   sed -e 's/<[^>]*>//g' /tmp/testS.txt > /tmp/testS2.txt
+   #grep "Season" synopsis.php > /tmp/Season.txt
+   #grep "Episode" synopsis.php > /tmp/Episodes.txt
+   #sed -e 's/Season//g' /tmp/Season.txt > /tmp/testS.txt
+   #sed -e 's/<[^>]*>//g' /tmp/testS.txt > /tmp/testS2.txt
    #on part du principe ou les synopsys sont ordonnes!
-   cat /tmp/testS2.txt | tail -1 > /tmp/withspaces.txt
-   sed 's/ //g' /tmp/withspaces.txt > /tmp/no-spaces.txt
-   nb_synopsys=$(cat /tmp/no-spaces.txt)
-   echo "NB Seasons $nb_synopsys"
+   #cat /tmp/testS2.txt | tail -1 > /tmp/withspaces.txt
+   #sed 's/ //g' /tmp/withspaces.txt > /tmp/no-spaces.txt
+   #nb_synopsys=$(cat /tmp/no-spaces.txt)
+   #echo "NB Seasons $nb_synopsys"
 
-   grep "Episode" synopsis.php > /tmp/testE.txt
-   sed -e 's/<[^>]*>//g' /tmp/testE.txt > /tmp/testE2.txt
-   sed -e 's/Episode//g' /tmp/testE2.txt > /tmp/testE3.txt
-   sed -i '1d' /tmp/testE3.txt
-   cat /tmp/testE3.txt | awk -F':' '{print $1}' > /tmp/Efinal.txt
-   max="0"
-   while read line
-   do
-   if [ "$max" -lt "$line" ]; then
-      max=$line
-   fi
-   done < /tmp/Efinal.txt
-   echo "NB max episodes $max"
+   #grep "Episode" synopsis.php > /tmp/testE.txt
+   #sed -e 's/<[^>]*>//g' /tmp/testE.txt > /tmp/testE2.txt
+   #sed -e 's/Episode//g' /tmp/testE2.txt > /tmp/testE3.txt
+   #sed -i '1d' /tmp/testE3.txt
+   #cat /tmp/testE3.txt | awk -F':' '{print $1}' > /tmp/Efinal.txt
+   #max="0"
+   #while read line
+   #do
+   #if [ "$max" -lt "$line" ]; then
+   #   max=$line
+   #fi
+   #done < /tmp/Efinal.txt
+   #sed 's/ //g' $max > /tmp/no-spaces2.txt
+   #echo "NB max episodes $max"
+
+   #dans un premier temps on doit recuperer la description
+  #for ((i=0; i<$nb_synopsys; i++))
+  #do
+  #for ((j=0; j<$max; i++))
+  #do
+  #echo "I J $i $j" 
+  #echo "NB Seasons $nb_synopsys"
+  #echo "NB max episodes $max"
+  #done 
+  #done
+
+#nb_synopsys=$((nb_synopsys+0))
+#max=$((max+0))
+
+
+#for i in $nb_synopsys
+#do
+#echo "$i"
+#done
+IFS=$'\n'
+var5=$(cat synopsis.php)
+echo $var5
+regex="Season\ ([0-9]+)|Episode\ ([0-9]+)"
+
+#echo "VAR 5 $var5"
+for f in $var5
+do
+#echo "F $f"
+ [[ $f =~ $regex ]]
+ seasons="${BASH_REMATCH[1]}"
+ episodes="${BASH_REMATCH[2]}"
+if [ "$seasons" != "" ]; then
+echo $seasons
+fi
+
+if [ "$episodes" != "" ]; then
+ echo $episodes
+fi
+ 
+done
+
+exit 0
 }
 
 
 function upbackup(){
-   curl -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
+   curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
    exit 0
 }
 #Cette partie gere les arguments et lance la bonne méthode
