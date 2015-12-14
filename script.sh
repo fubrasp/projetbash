@@ -400,11 +400,18 @@ function recupsynops(){
 #do
 #echo "$i"
 #done
+
+?s=1&e=1
+pre="?s="
+post="&e="
+page_stock="page"
+php=".php"
 IFS=$'\n'
 var5=$(cat synopsis.php)
 echo $var5
 regex="Season\ ([0-9]+)|Episode\ ([0-9]+)"
-
+s=""
+e=""
 #echo "VAR 5 $var5"
 for f in $var5
 do
@@ -412,13 +419,20 @@ do
  [[ $f =~ $regex ]]
  seasons="${BASH_REMATCH[1]}"
  episodes="${BASH_REMATCH[2]}"
+
 if [ "$seasons" != "" ]; then
 echo $seasons
+s=$seasons
+else
+if [ "$episodes" != "" ]; then
+echo $episodes
+e=$episodes
+curl $MAIN_SYNOPSIS_WEBPAGE$pre$seasons$post$episodes > $page_stock$s$e$php
+fi
 fi
 
-if [ "$episodes" != "" ]; then
- echo $episodes
-fi
+
+
  
 done
 
