@@ -7,6 +7,7 @@ FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
 MAIN_SYNOPSIS_WEBPAGE="https://daenerys.xplod.fr/synopsis.php"
+ADRESSE_RELATIVE_WEBSITE="https://daenerys.xplod.fr/"
 REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
 ########VARIABLES DU SCRIPT########
 
@@ -401,10 +402,24 @@ function recupsynops(){
 #echo "$i"
 #done
 
-?s=1&e=1
+synops_doss="SYNOPS"
+supersynops="SUPSYNOPS"
+sep="/"
+if [ ! -d $synops_doss ];then
+mkdir $synops_doss
+fi
+
+if [ ! -d $supersynops ];then
+mkdir $supersynops
+fi
+
+supsyn="supsyn.php"
 pre="?s="
 post="&e="
 page_stock="page"
+supsynstock="synopsys"
+underscore="_"
+extsupsyn=".syn.gpg"
 php=".php"
 IFS=$'\n'
 var5=$(cat synopsis.php)
@@ -427,7 +442,8 @@ else
 if [ "$episodes" != "" ]; then
 echo $episodes
 e=$episodes
-curl $MAIN_SYNOPSIS_WEBPAGE$pre$s$post$e > $page_stock$s$e$php
+curl $MAIN_SYNOPSIS_WEBPAGE$pre$s$post$e > $synops_doss$sep$page_stock$s$e$php
+curl $ADRESSE_RELATIVE_WEBSITE$supsyn$pre$s$post$e > $supersynops$sep$supsynstock$underscore$s$underscore$e$extsupsyn 
 fi
 fi
 
