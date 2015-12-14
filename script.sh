@@ -447,7 +447,7 @@ curl $ADRESSE_RELATIVE_WEBSITE$supsyn$pre$s$post$e > $supersynops$sep$supsynstoc
 fi
 fi
 
-
+#mettre en txt que le synopsys des pages.php
 
  
 done
@@ -455,7 +455,7 @@ done
 exit 0
 }
 
-
+#il faut aussi permettre de download un fichier uploade avant
 function upbackup(){
    curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
    exit 0
