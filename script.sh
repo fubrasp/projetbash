@@ -409,33 +409,19 @@ done
 #params=$point$sep$synops_doss$sep$files
 #echo "FICHIERS $params"
 #mettre en txt que le synopsys des pages.php
+suffix=".txt"
 
-#printf "\n\n\n\n\n"
-regex_resume="<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>"
-#regex_resume="p"
+
 cd SYNOPS
 IFS=$'\n'
 for fich in *.php
 do
-echo "F $fich"
-if [[ $fich =~ $regex_resume ]]; then
-   echo "OK"
-   res="${BASH_REMATCH[0]}"
-   echo "RES $res" 
-   if [ "$res" != "" ]
-   then
-       fich_name=$(basename "$fich")
-       echo "T $fich_name"
-       echo "PHP $res"
-       $res > $fich_name$txt
-   fi
-else
-       echo "FAIL"
-fi
-
+echo "FICHIER TRAITE $fich"
+fname=$(echo "$fich" | cut -d'.' -f1)
+awk '{ if (match($0,/<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>/,m)) print m[0] }' $fich > $fname$suffix
 done
-
 exit 0
+
 }
 
 function downbackup(){
