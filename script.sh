@@ -71,7 +71,9 @@ case $OS in
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
     brew install dialog gpg
     ;;
-  *) ;;
+  *)
+  echo "ARCHITECTURE NON PRIS EN CHARGE-Installez les packets manuellement"
+  ;;
 esac 
 }
 
@@ -354,55 +356,7 @@ function downfile(){
 }
 
 function recupsynops(){
-
-   #STR ?s=1&e=1
-   #pour les episodes il faut trouver une meilleure solution
-   #dans un premier vu que c'est au fur et a mesure on doit traiter la page principale (on ne peut pas utiliser les cas d'erreurs vu la conf du site)
-   curl -O $MAIN_SYNOPSIS_WEBPAGE
-   #grep "Season" synopsis.php > /tmp/Season.txt
-   #grep "Episode" synopsis.php > /tmp/Episodes.txt
-   #sed -e 's/Season//g' /tmp/Season.txt > /tmp/testS.txt
-   #sed -e 's/<[^>]*>//g' /tmp/testS.txt > /tmp/testS2.txt
-   #on part du principe ou les synopsys sont ordonnes!
-   #cat /tmp/testS2.txt | tail -1 > /tmp/withspaces.txt
-   #sed 's/ //g' /tmp/withspaces.txt > /tmp/no-spaces.txt
-   #nb_synopsys=$(cat /tmp/no-spaces.txt)
-   #echo "NB Seasons $nb_synopsys"
-
-   #grep "Episode" synopsis.php > /tmp/testE.txt
-   #sed -e 's/<[^>]*>//g' /tmp/testE.txt > /tmp/testE2.txt
-   #sed -e 's/Episode//g' /tmp/testE2.txt > /tmp/testE3.txt
-   #sed -i '1d' /tmp/testE3.txt
-   #cat /tmp/testE3.txt | awk -F':' '{print $1}' > /tmp/Efinal.txt
-   #max="0"
-   #while read line
-   #do
-   #if [ "$max" -lt "$line" ]; then
-   #   max=$line
-   #fi
-   #done < /tmp/Efinal.txt
-   #sed 's/ //g' $max > /tmp/no-spaces2.txt
-   #echo "NB max episodes $max"
-
-   #dans un premier temps on doit recuperer la description
-  #for ((i=0; i<$nb_synopsys; i++))
-  #do
-  #for ((j=0; j<$max; i++))
-  #do
-  #echo "I J $i $j" 
-  #echo "NB Seasons $nb_synopsys"
-  #echo "NB max episodes $max"
-  #done 
-  #done
-
-#nb_synopsys=$((nb_synopsys+0))
-#max=$((max+0))
-
-
-#for i in $nb_synopsys
-#do
-#echo "$i"
-#done
+curl -O $MAIN_SYNOPSIS_WEBPAGE
 
 synops_doss="SYNOPS"
 supersynops="SUPSYNOPS"
@@ -426,7 +380,6 @@ extsupsyn=".syn.gpg"
 php=".php"
 IFS=$'\n'
 var5=$(cat synopsis.php)
-echo $var5
 regex="Season\ ([0-9]+)|Episode\ ([0-9]+)"
 s=""
 e=""
@@ -451,33 +404,36 @@ fi
 fi
 done
 
-files="*"
-point="."
-params=$point$sep$synops_doss$sep$files
-echo "FICHIERS $params"
+#files="*"
+#point="."
+#params=$point$sep$synops_doss$sep$files
+#echo "FICHIERS $params"
 #mettre en txt que le synopsys des pages.php
-#inutile normallement 
 
+#printf "\n\n\n\n\n"
+regex_resume="<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>"
+#regex_resume="p"
+cd SYNOPS
+IFS=$'\n'
+for fich in *.php
+do
+echo "F $fich"
+if [[ $fich =~ $regex_resume ]]; then
+   echo "OK"
+   res="${BASH_REMATCH[0]}"
+   echo "RES $res" 
+   if [ "$res" != "" ]
+   then
+       fich_name=$(basename "$fich")
+       echo "T $fich_name"
+       echo "PHP $res"
+       $res > $fich_name$txt
+   fi
+else
+       echo "FAIL"
+fi
 
-#IFS=$'\n'
-#regex_p="<p[^>]*>.*?<\/p>"
-#cd SYNOPS
-#for line in SYNOPS/*.php
-#do
-# [[ $line =~ $regex_p ]]
-# p="${BASH_REMATCH[0]}"
-# echo "PARAGRAPH $p"
-#if [ "$p" != "" ]; then
-# echo "PARAGRAPH $p"
-#fi
-#echo $line
-#cat $line
-#done
-
-
-echo "$line $synops_doss$sep$page_stock$s$e$txt"
-sed 's/<p[^>]*>.*?<\/p>//g' $line > $synops_doss$sep$page_stock$s$e$txt
-
+done
 
 exit 0
 }
@@ -488,6 +444,7 @@ function downbackup(){
 #curl -i $ADRESSE_DW_BACKUP_SITE$1 > test.txt
 #curl -O $name $ADRESSE_DW_BACKUP_SITE$1
 url=$ADRESSE_DW_BACKUP_SITE$1
+# | sed -i -e 's/^M//g'
 filename=$(curl -sI  $url | grep -o -E 'filename=.*$' | sed -e 's/filename=//' | sed -e 's/"//' | sed -e 's/"//')
 echo "FICHIER $filename"
 curl -o $filename -L $url
