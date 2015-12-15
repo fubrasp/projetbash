@@ -1,15 +1,38 @@
 #!/bin/bash
 
 ########VARIABLES DU SCRIPT########
+
+#configuration de la limite pour la supression automatique de backups
+
+#nom du fichier de configuration
+#fichier de configuration par defaut le cas echeant
+#fichier sauvegardant le choix de configuration effectues posterieurement
+#fichier permettant de savoir si l'installation a deja ete realisee
+#repertoire ou sont stockes les fichiers telecharges la fonction downfile
+
+#url d'upload de backups 
+#url de download de backups
+#url de la page recapitulative des synopsys
+#url de base du site
+
+#extension .txt
+
+#*********************CONFIG supression automatique***************************  
+#mis a 5 pour les tests la valeur normale est de 100
+LIMITE_NB_FICHIERS_AUTO_SUPPRESSION=5
+#****************************CONFIG backup************************************
 fichier_conf_nom=""
 FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
+REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
+#********************************URLs*****************************************
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
 ADRESSE_DW_BACKUP_SITE="https://daenerys.xplod.fr/backup/download.php?login=bertrandcerfruez&hash="
-MAIN_SYNOPSIS_WEBPAGE="https://daenerys.xplod.fr/synopsis.php"
-ADRESSE_RELATIVE_WEBSITE="https://daenerys.xplod.fr/"
-REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
+PAGE_SYNOPS_SITE="https://daenerys.xplod.fr/synopsis.php"
+ADRESSE_RELATIVE_SITE="https://daenerys.xplod.fr/"
+#****************************extensions***************************************
+TXT=".txt"
 ########VARIABLES DU SCRIPT########
 
 #usage, explications 
@@ -27,14 +50,11 @@ function usage(){
     printf "\t-h                       : affiche ce message.\n"
 }
 
-#installation des divers packages
-#plus important le cas de levinux
+#Installations et initialisations des divers packages necessaires au script
 function installpackages(){
 echo "***INSTALLATION AUTOMATIQUE***"
-#ce n'est probablement pas complet!!
-#levinux
+#Levinux
 osdef=$(uname -a)
-#a completer mieux le match
 if [[ $osdef == *"tiny"* ]]; then
 tce-load dialog gnupg
 exit 0
@@ -44,67 +64,71 @@ OS=$(uname)
 echo "MON SYSTEME EST UN $OS"
 case $OS in
   'Linux')
-    #test l'existence du chemin pour les rpm
+    #Test l'existence du chemin pour les rpm
     res=$(/usr/bin/rpm -q -f /usr/bin/rpm 2> /dev/null)
     if [[ $res == *"rpm"* ]]
+    #Linux avec packages RPM
     then
-        #les distros avec packages rpm peuvent gerer les deb aussi
-        #hqbituellement les distros fedora sont changes souvent, pour les les redhat..
-        #OS='RPM based Linux'
+        #Les distributions avec packages rpm peuvent gerer les deb aussi
+        #Habituellement les distributions fedora sont changes souvent..
+        #On peut utiliser le yum qui est deprecier a l'heure actuelle cela fonctionne encore avec la commande yum
         sudo dnf install dialog gnupg
+    #Linux avec packages DEB
     else
-	#inutile sur une ubuntu de base en desktop
-        #OS="DEB based Linux"
+	#Le dialog est deja sur une ubuntu de base en desktop
 	sudo apt-get install dialog gnupg
     fi
     #FAIRE l'init de GPG
     ;;
+   #On peut etendre a d'autre BSD..
   'FreeBSD')
-    #OS='FreeBSD'
-    #je ne sais pas s'il existe sur FreeBSD
     pkg install dialog gnupg
     #FAIRE l'init de GPG 
     ;;
-   #cas non verifie
+   #On peut etendre a d'autre versions de Macintosh
+   #Cas non verifie
+   #Mac utilisation de la commande brew..
   'Darwin') 
-    #OS='Mac'
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
     brew install dialog gpg
     ;;
+  #Joker
   *)
   echo "ARCHITECTURE NON PRIS EN CHARGE-Installez les packets manuellement"
   ;;
 esac 
 }
 
-########################TEST USAGE########################
-#abscence d'arguments -> affichage de l'usage
+########################TEST LANCEMENT########################
+#Abscence d'arguments -> affichage de l'usage
+#**************APPEL DE L USAGE**************
 if [ $# -eq 0 ]; then
     usage
 fi
 
-#lancement de l'install au premier lancement
+#Lancement de l'installation au premier lancement du script (installation fraiche)
 if [ ! -e $FICHIER_TEST_INSTALLATION ]; then
-    echo "install realisee" > $FICHIER_TEST_INSTALLATION
+    echo "Installation des packets logiciels necessaires realisee" > $FICHIER_TEST_INSTALLATION
     installpackages
-    echo "maintenant vous pouvez relancer la commande l'installation des dependances est realisee"
+    echo "INSATALLATION DES DEPENDANCES EST TERMINEE, Relancer la commande précédante"
     exit 0
 fi
 
 #le test de l'ordre des arguments ne marche pas
-########################TEST USAGE########################
+########################TEST LANCEMENT########################
 
-
+#Methode d'aide a la configuration 
 function confexample(){
     echo ""
     fichier_conf_example="conf_exemple.txt"
-    echo "###un fichier type###"
-    echo "#juste de dossier listes"
-    echo "#debut du fichier de conf"
+    echo "###Un fichier de configuration typique###"
+    echo "#Il s'agit de dossiers listes"
+    echo "#Debut du fichier de configuration"
+    echo "#pas de sensibilite a la case"
     echo "dossier1"
     echo "dossier2"
     echo "dossier3"
-    echo "#fin du fichier de conf"
+    echo "#fin du fichier de configuration"
     printf "dossier1\ndossier2\ndossier3" > $fichier_conf_example
     echo "un exemple a ete cree dans $fichier_conf_example"
     echo ""
@@ -135,10 +159,17 @@ function verifconf(){
         else
             fichier_conf_nom=$(head -n 1 $FICHIER_SAUVEGARDE_CONFIG)        
     fi
+
+    #regex=""
+    #test de la forme du fichier avec une regex
+    #if [ ! $FICHIER_SAUVEGARDE_CONFIG ~= $regex ];then
+    #echo "le fichier de configuration n'est pas de la bonne forme!!"
+    #confexample
+    #fi
+
 }
 
 function veriflire(){
-#ne pas chercher a modifier l'ordre des deux tests
 if [ -z $1 ]; then
    echo "vous devez passer un dossier à --lire:"
    usage
@@ -152,8 +183,6 @@ if [ ! -d "$1" ]; then
    fi
    exit 1
 fi
-
-
 }
 
 function lire(){
@@ -184,16 +213,13 @@ function lire(){
 
 function autosupressbackup(){
     #pour chaque dossier de backup on a un fichier les listant
-    limite_nb_fichiers=5
-    #limite_nb_fichiers=100
     nom=listedesbackup
-    txt=".txt"
-    filename=$2$nom$txt
+    filename=$2$nom$TXT
     echo "$1" >> $filename
     #on compte le nombre de backups dans le bon dossier
     nb_fichiers=$(wc --words $filename  | cut -d ' ' -f1)
     echo "NOMBRE DE FICHIERS $nb_fichiers dans $2"
-    if [ $nb_fichiers -eq $limite_nb_fichiers ]
+    if [ $nb_fichiers -eq $LIMITE_NB_FICHIERS_AUTO_SUPPRESSION ]
     then
     backup_la_plus_ancienne=$(head -n 1 $filename)
     cd $2
@@ -207,10 +233,9 @@ function autosupressbackup(){
 function supressbackup(){
     sudo rm -f $1
     nom=listedesbackup
-    txt=".txt"
     sup=$(dirname $1)    
     file=$(basename $1)
-    filename=$sup$nom$txt
+    filename=$sup$nom$TXT
     dol="/$"
     d="/d"
     a_sup=$dol$file$d
@@ -356,7 +381,7 @@ function downfile(){
 }
 
 function recupsynops(){
-curl -O $MAIN_SYNOPSIS_WEBPAGE
+curl -O $PAGE_SYNOPS_SITE
 
 synops_doss="SYNOPS"
 supersynops="SUPSYNOPS"
@@ -369,7 +394,6 @@ if [ ! -d $supersynops ];then
 mkdir $supersynops
 fi
 
-txt=".txt"
 supsyn="supsyn.php"
 pre="?s="
 post="&e="
@@ -398,8 +422,8 @@ else
 if [ "$episodes" != "" ]; then
 echo $episodes
 e=$episodes
-curl $MAIN_SYNOPSIS_WEBPAGE$pre$s$post$e > $synops_doss$sep$page_stock$s$e$php
-curl $ADRESSE_RELATIVE_WEBSITE$supsyn$pre$s$post$e > $supersynops$sep$supsynstock$underscore$s$underscore$e$extsupsyn 
+curl $PAGE_SYNOPS_SITE$pre$s$post$e > $synops_doss$sep$page_stock$s$e$php
+curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $supersynops$sep$supsynstock$underscore$s$underscore$e$extsupsyn 
 fi
 fi
 done
@@ -409,7 +433,7 @@ done
 #params=$point$sep$synops_doss$sep$files
 #echo "FICHIERS $params"
 #mettre en txt que le synopsys des pages.php
-suffix=".txt"
+
 
 
 cd SYNOPS
@@ -418,7 +442,7 @@ for fich in *.php
 do
 echo "FICHIER TRAITE $fich"
 fname=$(echo "$fich" | cut -d'.' -f1)
-awk '{ if (match($0,/<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>/,m)) print m[0] }' $fich > $fname$suffix
+awk '{ if (match($0,/<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>/,m)) print m[0] }' $fich > $fname$TXT
 done
 exit 0
 
