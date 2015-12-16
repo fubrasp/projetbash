@@ -96,6 +96,11 @@ case $OS in
         sudo dnf install dialog gnupg curl
     #Linux avec packages DEB
     else
+        if [ $osdef == *"Debian"* ]
+        then
+        su root
+        apt-get install dialog gnupg curl
+        else
 	#Le dialog est deja sur une ubuntu de base en desktop
 	sudo apt-get install dialog gnupg curl
     fi
