@@ -50,6 +50,7 @@ ADRESSE_RELATIVE_SITE="https://daenerys.xplod.fr/"
 TXT=".txt"
 PHP=".php"
 TARGZ=".tar.gz"
+GPG=".gpg"
 #outils
 DOL="/$"
 D="/d"
@@ -259,7 +260,7 @@ function autosupressbackup(){
     sudo rm -Rf $2$SEPARATEUR$backup_la_plus_ancienne
     #On doit supprimer l'entree sur le fichier correspondant au fichier c'est a dire la premiere ligne du fichier
     sed -i '1d' $filename
-    echo "****FICHIER $filename SUPPRIME AUTOMATIQUEMENT*****"
+    echo "****FICHIER $backup_la_plus_ancienne SUPPRIME AUTOMATIQUEMENT*****"
     fi
 }
 
@@ -329,6 +330,8 @@ for line in $files
     cd $1 
     tar cvzf $backup_name.tar.gz $backup_name
     crypte $backup_name.tar.gz
+    #demande dans l'enonce juste la personne qui a cree peut lire la backup
+    sudo chmod 400 $backup_name.tar.gz.gpg
     rm -R -f $backup_name
     rm -f $backup_name.tar.gz
     cd ..
@@ -367,6 +370,8 @@ function crypte(){
 
 #Cette fonction permet le diff entre 2 backups
 function differ(){
+#                if [ -f $1 ] || [ -f $2 ]
+#                then  
 		a=$1
                 b=$2
                 directory_a=$(dirname $a)
@@ -402,7 +407,10 @@ function differ(){
                 rm -Rf $a
                 rm -Rf $b		
 		exit 0
-
+#                else
+#                echo "UN des deux dossiers, ou les deux n'existent pas!!!"     
+#                exit 1
+#                fi
 }
 
 
