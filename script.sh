@@ -130,7 +130,7 @@ keys_exist=$(gpg --list-keys)
 if [ "$keys_exist" == "" ]
 then
 echo "Vous n'avez pas de clef gpg!!"
-gpg --key-gen
+gpg --gen-key
 else
 echo "Une ou des clef(s) sont existente(s) vous pouvez l(es) utiliser pour proceder aux sauvegarde(s)"
 fi
