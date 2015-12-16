@@ -33,17 +33,21 @@ CONF_SCRIPT="CONF_SCRIPT"
 LIMITE_NB_FICHIERS_AUTO_SUPPRESSION=3
 NOM_FICHIER_LISTANT_LESBACKUPS="listedesbackup"
 #****************************CONFIG backup************************************
+#LOCAL
 fichier_conf_nom=""
 FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
+#DISTANT
 REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
+NOM_FICHIER_LISTE_BACKUPS_UPLOADES="liste_backups_uploades.txt"
 #*****************************CONFIG synopsys*********************************
 SYNOPS_DOSS="SYNOPS"
 SUPERSYNOPS_DOSS="SUPSYNOPS"
 #********************************URLs*****************************************
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
 ADRESSE_DW_BACKUP_SITE="https://daenerys.xplod.fr/backup/download.php?login=bertrandcerfruez&hash="
+ADRESSE_LIST_BACKUPS_UPLOADEES_JSON="https://daenerys.xplod.fr/backup/list.php?login=bertrandcerfruez"
 PAGE_SYNOPS_SITE="https://daenerys.xplod.fr/synopsis.php"
 ADRESSE_RELATIVE_SITE="https://daenerys.xplod.fr/"
 #****************************extensions***************************************
@@ -124,7 +128,7 @@ case $OS in
     ;;
   #Joker
   *)
-  echo "ARCHITECTURE NON PRIS EN CHARGE-Installez les packets manuellement"
+  echo "ARCHITECTURE NON PRIS EN CHARGE-Installez les packets ou compilez manuellement"
   ;;
 esac 
 keys_exist=$(gpg --list-keys)
@@ -196,7 +200,7 @@ function verifconf(){
     #Test si le fichier de configuration est vide
     if [ ! -s $(cat $FICHIER_SAUVEGARDE_CONFIG) ]
         then
-            echo "Fichier de conf $FICHIER_SAUVEGARDE_CONFIG existant mais vide!!"
+            echo "Fichier de conf $(cat $FICHIER_SAUVEGARDE_CONFIG) existant mais vide!!"
             confexample
 	    exit 1
         else
@@ -356,24 +360,7 @@ function recup(){
 
 #Fonction qui crypte le backup
 function crypte(){
-    #gpg-zip -c -o $1.gpg $1
-    #il nous faut notre propre cle a la base
-    #TO DO
-    #on suit les etapes que gpg indique
-    #on s'indique soi meme comme destinataire
-    #le but est de voir si key contient rien il n'y a pas de cle
-    key=$(gpg --list-keys)
-    #if [ ! $key="" ]
-    #then
-    #fi
-    #si on a pas de clef, sinon on fait rien
-#NE FONCTIONNE PAS
-    #test restrictif!!   
-#    if [ ! -z ../.gnupg/pubring.gpg ]
-#    then    
-#	gpg --gen-key
-    #fi
-    echo $1
+    echo "Archive $1 cryptee"
     gpg --encrypt $1
 }
 
@@ -507,11 +494,16 @@ exit 0
 }
 
 function downbackup(){
-#on concatene le hash
-#result_request=$(curl -i $ADRESSE_DW_BACKUP_SITE$1)
-#curl -i $ADRESSE_DW_BACKUP_SITE$1 > test.txt
-#curl -O $name $ADRESSE_DW_BACKUP_SITE$1
-url=$ADRESSE_DW_BACKUP_SITE$1
+#Dans un premier temps on va afficher les hash et les noms pour permettre un choix plus claire
+curl $ADRESSE_LIST_BACKUPS_UPLOADEES_JSON > $NOM_FICHIER_LISTE_BACKUPS_UPLOADES
+cat $NOM_FICHIER_LISTE_BACKUPS_UPLOADES
+printf "\n"
+#On concatene le hash à l'url
+echo "rentrez le hash pour telecharger"
+read res
+#On concatene le hash à l'url
+url=$ADRESSE_DW_BACKUP_SITE$res
+#On voulait enlever le caractere bizarre, ne pose pas probleme ceci dit
 # | sed -i -e 's/^M//g'
 filename=$(curl -sI  $url | grep -o -E 'filename=.*$' | sed -e 's/filename=//' | sed -e 's/"//' | sed -e 's/"//')
 echo "FICHIER $filename"
@@ -520,10 +512,25 @@ exit 0
 }
 
 function upbackup(){
-   curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
+   #Genere le hash du fichier passe en parametre
+   md5_fichier_pour_upload=$(md5sum $1)
+   curl $ADRESSE_LIST_BACKUPS_UPLOADEES_JSON > $NOM_FICHIER_LISTE_BACKUPS_UPLOADES
+   if [[ $(cat $NOM_FICHIER_LISTE_BACKUPS_UPLOADES) == *"$md5_fichier_pour_upload"* ]]
+   then
+   echo "Le fichier est DEJA uploade, unploader une copie? (y/n)"
+   read response
+   if [ $response == "y" ] || [ $response == "Y" ] ; then
+      curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
+   fi
+   else
+      curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
+   fi
+   #On telecharge la derniere version de la liste, on prevoit qu'a l'avenir on pourrait supprimer en ligne
    exit 0
 }
-#Cette partie gere les arguments et lance la bonne méthode
+
+
+#Cette partie gere les arguments et lance la bonne methode
 OPTS=$( getopt -o h -l conf:,backupdir:,lire,supp,installer,uploadbck,dwnfile,recupallsynops,dwbackup,differ -- "$@" )
 if [ $? != 0 ]
 then
