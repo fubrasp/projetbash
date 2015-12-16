@@ -96,7 +96,7 @@ case $OS in
         sudo dnf install dialog gnupg curl
     #Linux avec packages DEB
     else
-        if [ $osdef == *"Debian"* ]
+        if [ $osdef ~= "Debian" ]
         then
         su root
         apt-get install dialog gnupg curl
