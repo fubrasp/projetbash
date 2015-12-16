@@ -2,30 +2,45 @@
 
 ########VARIABLES DU SCRIPT########
 
-#configuration de la limite pour la supression automatique de backups
+#Repertoire de stockage des fichiers pour le fonctionnement de script en cas de changement de machine ne pas copier
 
-#nom du fichier de configuration
-#fichier de configuration par defaut le cas echeant
-#fichier sauvegardant le choix de configuration effectues posterieurement
-#fichier permettant de savoir si l'installation a deja ete realisee
-#repertoire ou sont stockes les fichiers telecharges la fonction downfile
+#Configuration de la limite pour la supression automatique de backups
+#Nom generique pour le fichier listant les backup qui est de la forme DOSSIER_DE_SAUVEGARDEnomgenerique.txt
+
+#Nom du fichier de configuration
+#Fichier de configuration par defaut le cas echeant
+#Fichier sauvegardant le choix de configuration effectues posterieurement
+#Fichier permettant de savoir si l'installation a deja ete realisee
+#Repertoire ou sont stockes les fichiers telecharges la fonction downfile
 
 #url d'upload de backups 
 #url de download de backups
 #url de la page recapitulative des synopsys
 #url de base du site
 
-#extension .txt
+#Extension .txt
+#Extension .php
+#Extension .tar.gz
 
+#Signe / et dollar
+#Signe / et d
+#Separateur /
+
+#*********************CONFIG script***************************  
+CONF_SCRIPT="CONF_SCRIPT"
 #*********************CONFIG supression automatique***************************  
 #mis a 5 pour les tests la valeur normale est de 100
-LIMITE_NB_FICHIERS_AUTO_SUPPRESSION=5
+LIMITE_NB_FICHIERS_AUTO_SUPPRESSION=3
+NOM_FICHIER_LISTANT_LESBACKUPS="listedesbackup"
 #****************************CONFIG backup************************************
 fichier_conf_nom=""
 FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
 REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
+#*****************************CONFIG synopsys*********************************
+SYNOPS_DOSS="SYNOPS"
+SUPERSYNOPS_DOSS="SUPSYNOPS"
 #********************************URLs*****************************************
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
 ADRESSE_DW_BACKUP_SITE="https://daenerys.xplod.fr/backup/download.php?login=bertrandcerfruez&hash="
@@ -33,20 +48,26 @@ PAGE_SYNOPS_SITE="https://daenerys.xplod.fr/synopsis.php"
 ADRESSE_RELATIVE_SITE="https://daenerys.xplod.fr/"
 #****************************extensions***************************************
 TXT=".txt"
+PHP=".php"
+TARGZ=".tar.gz"
+#outils
+DOL="/$"
+D="/d"
+SEPARATEUR="/"
 ########VARIABLES DU SCRIPT########
 
-#usage, explications 
+#usage: explications 
 function usage(){
     printf "Utilisation du script :\n"
-    #printf "\t--conf                  : lance le backup  \n"
-    printf "\t--installer                : installe les depandes suivant votre systeme type unix"
+    printf "\t--installer              : installe les depandes suivant votre systeme type unix\n"
     printf "\t--conf                   : choisit le fichier de configuration  \n"
     printf "\t--backupdir              : indique l'endroit a mettre le backup \n"
     printf "\t--lire                   : lire un dossier de backup revient a faire un ls après avoir decrypte et desarchive  \n"
     printf "\t--uploadbck              : uploader un dossier de backup \n"
-    printf "\t--dwbackup               : download d'une backup a partir de son hash"     
+    printf "\t--dwbackup               : download d'une backup a partir de son hash\n"
+    printf "\t--recupallsynops         : recupere les synopsys\n"     
     printf "\t--supp                   : supprime proprement un dossier de backup \n" 
-    printf "\t--conf fichierConf.txt --backupdir dossierDeStockageBackups "
+    printf "\t--conf fichierConf.txt --backupdir dossierDeStockageBackups\n"
     printf "\t-h                       : affiche ce message.\n"
 }
 
@@ -56,7 +77,7 @@ echo "***INSTALLATION AUTOMATIQUE***"
 #Levinux
 osdef=$(uname -a)
 if [[ $osdef == *"tiny"* ]]; then
-tce-load dialog gnupg
+tce-load dialog gnupg curl
 exit 0
 fi
     
@@ -72,17 +93,17 @@ case $OS in
         #Les distributions avec packages rpm peuvent gerer les deb aussi
         #Habituellement les distributions fedora sont changes souvent..
         #On peut utiliser le yum qui est deprecier a l'heure actuelle cela fonctionne encore avec la commande yum
-        sudo dnf install dialog gnupg
+        sudo dnf install dialog gnupg curl
     #Linux avec packages DEB
     else
 	#Le dialog est deja sur une ubuntu de base en desktop
-	sudo apt-get install dialog gnupg
+	sudo apt-get install dialog gnupg curl
     fi
     #FAIRE l'init de GPG
     ;;
    #On peut etendre a d'autre BSD..
   'FreeBSD')
-    pkg install dialog gnupg
+    pkg install dialog gnupg curl
     #FAIRE l'init de GPG 
     ;;
    #On peut etendre a d'autre versions de Macintosh
@@ -90,7 +111,7 @@ case $OS in
    #Mac utilisation de la commande brew..
   'Darwin') 
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
-    brew install dialog gpg
+    brew install dialog gnupg curl
     ;;
   #Joker
   *)
@@ -110,8 +131,12 @@ fi
 if [ ! -e $FICHIER_TEST_INSTALLATION ]; then
     echo "Installation des packets logiciels necessaires realisee" > $FICHIER_TEST_INSTALLATION
     installpackages
-    echo "INSATALLATION DES DEPENDANCES EST TERMINEE, Relancer la commande précédante"
+    echo "L'INSTALLATION DES DEPENDANCES EST TERMINEE, Relancer la commande précédante"
     exit 0
+fi
+
+if [ ! -d $CONF_SCRIPT ]; then
+mkdir $CONF_SCRIPT
 fi
 
 #le test de l'ordre des arguments ne marche pas
@@ -134,29 +159,30 @@ function confexample(){
     echo ""
 }
 
-#lance que pour le backupdir ou le conf!!
+#Lance la verification de la configuration concernant la liste des dossiers a backuper!
 function verifconf(){
-    #nom du fichier de configuration passe en parametre de, apres --backupdir
-    #argument qui n'est pas passe, cela veut dire qu'on peut faire la commande en 2 fois, passage par defaut
+    #Nom du fichier de configuration passe en parametre de, apres --backupdir
+    #Si l'argument n'est pas passe, cela veut dire qu'on peut faire la commande en 2 fois, passage par defaut
     if [ "$fichier_conf_nom" == "" ]
     then
     	fichier_conf_nom=$FICHIER_CONF_DEFAUT
     fi
 
-    #test de l'existance du parametre passe
+    #Test de l'existance du fichier de configuratio passe en parametre
     if [ ! -e $(cat $FICHIER_SAUVEGARDE_CONFIG) ]; then
       echo "Fichier de conf n'existe pas!!"
       confexample
       exit 1
     fi
  
-    #fichier vide
+    #Test si le fichier de configuration est vide
     if [ ! -s $(cat $FICHIER_SAUVEGARDE_CONFIG) ]
         then
             echo "Fichier de conf $FICHIER_SAUVEGARDE_CONFIG existant mais vide!!"
             confexample
 	    exit 1
         else
+            #On utilise le fichier de configuration indique s'il correspond a ce que l'on veut
             fichier_conf_nom=$(head -n 1 $FICHIER_SAUVEGARDE_CONFIG)        
     fi
 
@@ -192,15 +218,14 @@ function lire(){
     ls
     echo "regarder le dossier(gpg) que vous voulez lire, rentrez le"
     read dossier_voulu
-    extension=".tar.gz"
-    separateur="/"		
+
     #On decrypte l'archive a lire
     gpg $dossier_voulu
     #On fait un "basename" (on enleve les extension .tar.gz.gpg), un substring aurait ete plus propre..		
     a=$(echo "${dossier_voulu%%.*}")
     echo "ARG LIRE BASENAME $a"
     #On concatene l'extension tar gz		
-    c=$a$extension
+    c=$a$TARGZ
     #on decompresse
     tar zxfv $c
     cd $a
@@ -211,50 +236,51 @@ function lire(){
     exit 0 
 }
 
+#Fonction permettant la suppression automatique des backup au bout d'un d'un nombre defini de backup 
 function autosupressbackup(){
-    #pour chaque dossier de backup on a un fichier les listant
-    nom=listedesbackup
-    filename=$2$nom$TXT
+    #Pour chaque dossier de backup on a un fichier les listant
+    filename=$2$NOM_FICHIER_LISTANT_LESBACKUPS$TXT
     echo "$1" >> $filename
-    #on compte le nombre de backups dans le bon dossier
+    #On compte le nombre de backups dans le bon dossier -> le but est de stocke l'information su nombre de backup et de l'ordre des backups 
     nb_fichiers=$(wc --words $filename  | cut -d ' ' -f1)
     echo "NOMBRE DE FICHIERS $nb_fichiers dans $2"
-    if [ $nb_fichiers -eq $LIMITE_NB_FICHIERS_AUTO_SUPPRESSION ]
-    then
+    if [ $nb_fichiers -eq $LIMITE_NB_FICHIERS_AUTO_SUPPRESSION ]; then
+    #On prend la premiere ligne qui correspond au fichier le plus ancien 
     backup_la_plus_ancienne=$(head -n 1 $filename)
-    cd $2
-    sudo rm -Rf $backup_la_plus_ancienne
-    #doit supprime l'entree sur le fichier c'est a dire la premiere ligne du fichier
+    #Suppression de la backup la plus ancienne
+    sudo rm -Rf $2$SEPARATEUR$backup_la_plus_ancienne
+    #On doit supprimer l'entree sur le fichier correspondant au fichier c'est a dire la premiere ligne du fichier
     sed -i '1d' $filename
-    cd ..
+    echo "****FICHIER $filename SUPPRIME AUTOMATIQUEMENT*****"
     fi
 }
 
+#Fonction qui supprime proprement une backup -> sans creer des cas d'erreurs
 function supressbackup(){
+    #On supprime la backup
     sudo rm -f $1
-    nom=listedesbackup
-    sup=$(dirname $1)    
+    #On obtient le dossier ou se situe la bakup
+    sup=$(dirname $1)
+    #On obtient le nom de la backup    
     file=$(basename $1)
-    filename=$sup$nom$TXT
-    dol="/$"
-    d="/d"
-    a_sup=$dol$file$d
+    #On veut intervenir dans le fichier de la forme DOSSIERlistedebackups.txt
+    filename=$sup$NOM_FICHIER_LISTANT_LESBACKUPS$TXT
+    #regex pour la supression quelque soit l'emplacement dans le fichier
+    a_sup=$DOL$file$D
+    #Suppression de la ligne coresspondante
     sed $a_sup $filename
+    #A detailler???
     grep -v $file $filename > /tmp/BASHscript.txt
     cat /tmp/BASHscript.txt > $filename
     exit 0
 }
 
-#fonction de backup
-#creer un dossier pour les backup
-#copier les dossiers mentionnes dans le fichier de configuration (prealablement edites)
+#Fonction de backup
+#Creer un dossier pour les backup s'il n'a pas ete cree avant
 function backup(){
-#echo "BACKUP PASSAGE VERICONF $1 $3" 
-
 verifconf $1 
 backup="backup_"
-	current_hour=$(date +%Y%H%M%S)
-	separateur="/"
+current_hour=$(date +%Y%H%M%S)
 
     if [ -d "$1" ]
     then
@@ -263,9 +289,9 @@ backup="backup_"
 	mkdir "$1"
     fi
 	#chemin
-	#echo -e "full_path=$PWD$separateur$1$separateur$backup$current_hour \n" 
+	#echo -e "full_path=$PWD$SEPARATEUR$1$SEPARATEUR$backup$current_hour \n" 
 	#redirection ambigu si pas de param
-	full_path=$PWD$separateur$1$separateur$backup$current_hour
+	full_path=$PWD$SEPARATEUR$1$SEPARATEUR$backup$current_hour
 	backup_name=$backup$current_hour
 	#full_path=$backup$current_hour
 	echo -e "Recuperation des dossiers de: $fichier_conf_nom \n"
@@ -302,10 +328,10 @@ for line in $files
  }
 
 
-#Recupere le parametre du dossier principale
+#Fonction qui recupere le fichier de configuration
 function recup(){
    fichier_conf_nom=$1
-   echo "$fichier_conf_nom" > save_CONF.txt
+   echo "$fichier_conf_nom" > $FICHIER_SAUVEGARDE_CONFIG
 }
 
 #Fonction qui crypte le backup
@@ -337,35 +363,39 @@ function compareA(){
 }
 
 function compareB(){
-		extension=".tar.gz"
-		separateur="/"		
 		echo $a
 		b=$1
 		echo $b
 		#On decrypte les deux archives a comparer (diff)
-		gpg $a
-		gpg $b
+		#gpg $a
+		#gpg $b
 		#On fait un "basename" (on enleve les extension .tar.gz.gpg), un substring aurait ete plus propre..		
-		a=$(echo "${a%%.*}")
-		b=$(echo "${b%%.*}")
+		#a=$(echo "${a%%.*}")
+		#b=$(echo "${b%%.*}")
 		#On concatene l'extension tar gz, on recherche seulement a savoir si c'est different en terme de contenu		
-		c=$a$extension
-		d=$b$extension
+		#c=$a$TARGZ
+		#d=$b$TARGZ
 		#on fait le diff
-		diff $c $d
-                if [ "$c" -ot "$d" ]
+                printf "\n"
+		#diff $c $d
+                diff $a $b
+                printf "\n"
+                #if [ "$c" -ot "$d" ]
+                if [ "$a" -ot "$b" ]
                    then
-                       echo "$c est plus ancien que $d"
+                       #echo "$c est plus ancien que $d"
+                       echo "$a est plus ancien que $b"
                    else
-                       echo "$c est plus recent que $d"
+                       #echo "$c est plus recent que $d"
+                       echo "$a est plus recent que $b"
                 fi
 		#On supprime nos archives, a discuter
-		rm -Rf $c
-		rm -Rf $d		
+		#rm -Rf $c
+		#rm -Rf $d		
 		exit 0
 }
 
-
+#Fonction generique, pour telecharger a partie d'une url
 function downfile(){
    echo "ARG $1"
    if [ -d $REPERTOIRE_FICHIERS_TELECHARGES ]
@@ -380,18 +410,18 @@ function downfile(){
    exit 0
 }
 
+#Fonction recuperant les synopsys et episode dynamiquement ainsi que les signatures
 function recupsynops(){
+#Recuperation de la page principale
 curl -O $PAGE_SYNOPS_SITE
 
-synops_doss="SYNOPS"
-supersynops="SUPSYNOPS"
-sep="/"
-if [ ! -d $synops_doss ];then
-mkdir $synops_doss
+#Test de l'existence du dossier des synopsys
+if [ ! -d $SYNOPS_DOSS ];then
+mkdir $SYNOPS_DOSS
 fi
 
-if [ ! -d $supersynops ];then
-mkdir $supersynops
+if [ ! -d $SUPERSYNOPS_DOSS ];then
+mkdir $SUPERSYNOPS_DOSS
 fi
 
 supsyn="supsyn.php"
@@ -401,7 +431,7 @@ page_stock="page"
 supsynstock="synopsys"
 underscore="_"
 extsupsyn=".syn.gpg"
-php=".php"
+
 IFS=$'\n'
 var5=$(cat synopsis.php)
 regex="Season\ ([0-9]+)|Episode\ ([0-9]+)"
@@ -422,15 +452,15 @@ else
 if [ "$episodes" != "" ]; then
 echo $episodes
 e=$episodes
-curl $PAGE_SYNOPS_SITE$pre$s$post$e > $synops_doss$sep$page_stock$s$e$php
-curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $supersynops$sep$supsynstock$underscore$s$underscore$e$extsupsyn 
+curl $PAGE_SYNOPS_SITE$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$page_stock$s$e$PHP
+curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$underscore$s$underscore$e$extsupsyn 
 fi
 fi
 done
 
 #files="*"
 #point="."
-#params=$point$sep$synops_doss$sep$files
+#params=$point$SEPARATEUR$SYNOPS_DOSS$SEPARATEUR$files
 #echo "FICHIERS $params"
 #mettre en txt que le synopsys des pages.php
 
