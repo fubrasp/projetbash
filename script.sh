@@ -96,11 +96,10 @@ case $OS in
         sudo dnf install dialog gnupg curl
     #Linux avec packages DEB
     else
-        echo "PRECIS $osdef"
-        if [ $osdef ~= "(.)*Debian(.)*" ]
+        if [[ $osdef == *"Debian"* ]]
         then
-        su root
-        apt-get install dialog gnupg curl
+        printf "le script doit etre exclusivement utilise par root\ninstallez la commande sudo\n:su root, ensuite apt-get install sudo\npuis faite un\nsudo apt-get install dialog gnupg curl"
+        exit 0
         else
 	#Le dialog est deja sur une ubuntu de base en desktop
 	sudo apt-get install dialog gnupg curl
