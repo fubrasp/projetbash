@@ -103,6 +103,7 @@ case $OS in
         else
 	#Le dialog est deja sur une ubuntu de base en desktop
 	sudo apt-get install dialog gnupg curl
+        fi
     fi
     #FAIRE l'init de GPG
     ;;
