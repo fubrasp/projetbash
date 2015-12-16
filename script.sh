@@ -96,6 +96,7 @@ case $OS in
         sudo dnf install dialog gnupg curl
     #Linux avec packages DEB
     else
+        echo "PRECIS $osdef"
         if [ $osdef ~= "(.)*Debian(.)*" ]
         then
         su root
