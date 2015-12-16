@@ -98,8 +98,9 @@ case $OS in
     else
         if [[ $osdef == *"Debian"* ]]
         then
-        printf "le script doit etre exclusivement utilise par root\ninstallez la commande sudo\n:su root, ensuite apt-get install sudo\npuis faite un\nsudo apt-get install dialog gnupg curl"
-        exit 0
+        printf "le script doit etre exclusivement lance par root la remiere fois"
+        apt-get install sudo
+        sudo apt-get install dialog gnupg curl
         else
 	#Le dialog est deja sur une ubuntu de base en desktop
 	sudo apt-get install dialog gnupg curl
