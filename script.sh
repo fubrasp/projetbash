@@ -66,7 +66,8 @@ function usage(){
     printf "\t--uploadbck              : uploader un dossier de backup \n"
     printf "\t--dwbackup               : download d'une backup a partir de son hash\n"
     printf "\t--recupallsynops         : recupere les synopsys\n"     
-    printf "\t--supp                   : supprime proprement un dossier de backup \n" 
+    printf "\t--supp                   : supprime proprement un dossier de backup \n"
+    printf "\t--differ                 : fait la difference entre deux backups" 
     printf "\t--conf fichierConf.txt --backupdir dossierDeStockageBackups\n"
     printf "\t-h                       : affiche ce message.\n"
 }
@@ -364,43 +365,46 @@ function crypte(){
     gpg --encrypt $1
 }
 
-#ces 2 fonctions sont pour le diff entre 2 backups
-function compareA(){
+#Cette fonction permet le diff entre 2 backups
+function differ(){
 		a=$1
+                b=$2
+                directory_a=$(dirname $a)
+                directory_b=$(dirname $b)
+                echo "DOSSIER A $directory_a"
+		#On decrypte les deux archives a comparer (diff)
+		gpg $a
+		gpg $b
+		#On fait un "basename" (on enleve les extension .tar.gz.gpg), un substring aurait ete plus propre..		
+		a=$(echo "${a%%.*}")
+		b=$(echo "${b%%.*}")
+		#On concatene l'extension tar gz, on recherche seulement a savoir si c'est different en terme de contenu		
+		c=$a$TARGZ
+		d=$b$TARGZ
+                #On detare et decompresse
+                echo "A $c B $d"
+                tar zxfv $c -C $directory_a
+                tar zxfv $d -C $directory_b
+		#On fait le diff
+                printf "\n"
+		diff $a $b
+                printf "\n"
+                if [ "$c" -ot "$d" ]
+                   then
+                       echo "$c est plus ancien que $d"
+                   else
+                       echo "$c est plus recent que $d"
+                fi
+		#On supprime les archives
+		rm -Rf $c
+		rm -Rf $d
+                #On supprime les dossiers decompresses
+                rm -Rf $a
+                rm -Rf $b		
+		exit 0
+
 }
 
-function compareB(){
-		echo $a
-		b=$1
-		echo $b
-		#On decrypte les deux archives a comparer (diff)
-		#gpg $a
-		#gpg $b
-		#On fait un "basename" (on enleve les extension .tar.gz.gpg), un substring aurait ete plus propre..		
-		#a=$(echo "${a%%.*}")
-		#b=$(echo "${b%%.*}")
-		#On concatene l'extension tar gz, on recherche seulement a savoir si c'est different en terme de contenu		
-		#c=$a$TARGZ
-		#d=$b$TARGZ
-		#on fait le diff
-                printf "\n"
-		#diff $c $d
-                diff $a $b
-                printf "\n"
-                #if [ "$c" -ot "$d" ]
-                if [ "$a" -ot "$b" ]
-                   then
-                       #echo "$c est plus ancien que $d"
-                       echo "$a est plus ancien que $b"
-                   else
-                       #echo "$c est plus recent que $d"
-                       echo "$a est plus recent que $b"
-                fi
-		#On supprime nos archives, a discuter
-		#rm -Rf $c
-		#rm -Rf $d		
-		exit 0
-}
 
 #Fonction generique, pour telecharger a partie d'une url
 function downfile(){
@@ -503,7 +507,7 @@ function upbackup(){
    exit 0
 }
 #Cette partie gere les arguments et lance la bonne méthode
-OPTS=$( getopt -o h -l conf:,backupdir:,compA:,compB,lire,supp,installer,uploadbck,dwnfile,recupallsynops,dwbackup, -- "$@" )
+OPTS=$( getopt -o h -l conf:,backupdir:,lire,supp,installer,uploadbck,dwnfile,recupallsynops,dwbackup,differ -- "$@" )
 if [ $? != 0 ]
 then
     exit 1
@@ -516,8 +520,7 @@ while true ; do
             exit 0;;
         --conf) recup $2; shift 2;;
 	--backupdir) backup $2; shift 2;;
-	--compA) compareA $2; shift 2;;
-	--compB) compareB $3; shift 2;;
+        --differ) differ $3 $4; shift 2;;
         --lire) lire $2 $3; shift 2;;
         --uploadbck) upbackup $3; shift 2;;
         --dwbackup) downbackup $3; shift 2;;
