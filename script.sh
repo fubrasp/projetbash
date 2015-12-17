@@ -47,12 +47,14 @@ SYNOPS_DOSS="/home/$UTILISATEUR/GoT"
 NOM_SAISON="Saison"
 NOM_EPISODE="Episode"
 SUPERSYNOPS_DOSS="SUPSYNOPS"
+CLE_SYNOPSIS="supersynopsis_signature.pub"
 #********************************URLs*****************************************
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
 ADRESSE_DW_BACKUP_SITE="https://daenerys.xplod.fr/backup/download.php?login=bertrandcerfruez&hash="
 ADRESSE_LIST_BACKUPS_UPLOADEES_JSON="https://daenerys.xplod.fr/backup/list.php?login=bertrandcerfruez"
 PAGE_SYNOPS_SITE="https://daenerys.xplod.fr/synopsis.php"
 ADRESSE_RELATIVE_SITE="https://daenerys.xplod.fr/"
+ADRESSE_CLE_PUBLIQUE_SYNOPSYS="https://daenerys.xplod.fr/supersynopsis_signature.pub"
 #****************************extensions***************************************
 TXT=".txt"
 PHP=".php"
@@ -444,13 +446,17 @@ fi
 if [ ! -d $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS ];then
 mkdir $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS
 fi
-
+pub="supersynopsis_signature.pub"
+#Recupere la cle publique
+curl -O $ADRESSE_CLE_PUBLIQUE_SYNOPSYS
+#importe la cle
+gpg --import $CLE_SYNOPSIS 
 #Sequences utilises
 supsyn="supsyn.php"
 pre="?s="
 post="&e="
 supsynstock="synopsys"
-
+RESULT_SYNOPSIS_ARCHIVES="resultat.txt"
 
 IFS=$'\n'
 #On affiche la page principale
@@ -475,7 +481,17 @@ if [ "$episodes" != "" ]; then
 echo $episodes
 e=$episodes
 curl $PAGE_SYNOPS_SITE$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP
-curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN 
+curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN
+printf "\n"
+gpg --verify $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN
+if [ $? -eq 0 ]
+then
+echo "bonne cle pour $supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN" >> $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$RESULT_SYNOPSIS_ARCHIVES 
+else
+echo "mauvaise cle pour $supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN" >> $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$RESULT_SYNOPSIS_ARCHIVES 
+fi
+printf "\n"
+  
 fname=$(echo "$SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP" | cut -d'.' -f1)
 awk '{ if (match($0,/<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>/,m)) print m[0] }' $SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP > $fname$TXT 
 sed -i 's/<[^>]*>//g' $fname$TXT
