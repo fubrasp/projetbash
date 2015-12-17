@@ -26,6 +26,7 @@
 #Signe / et d
 #Separateur /
 
+UTILISATEUR=$(whoami)
 #*********************CONFIG script***************************  
 CONF_SCRIPT="CONF_SCRIPT"
 #*********************CONFIG supression automatique***************************  
@@ -42,7 +43,9 @@ FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
 REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
 NOM_FICHIER_LISTE_BACKUPS_UPLOADES="liste_backups_uploades.txt"
 #*****************************CONFIG synopsys*********************************
-SYNOPS_DOSS="SYNOPS"
+SYNOPS_DOSS="/home/$UTILISATEUR/GoT"
+NOM_SAISON="Saison"
+NOM_EPISODE="Episode"
 SUPERSYNOPS_DOSS="SUPSYNOPS"
 #********************************URLs*****************************************
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
@@ -55,10 +58,12 @@ TXT=".txt"
 PHP=".php"
 TARGZ=".tar.gz"
 GPG=".gpg"
+EXTSUPSYN=".syn.gpg"
 #outils
 DOL="/$"
 D="/d"
 SEPARATEUR="/"
+UNDERSCORE="_"
 ########VARIABLES DU SCRIPT########
 
 #usage: explications 
@@ -435,27 +440,29 @@ if [ ! -d $SYNOPS_DOSS ];then
 mkdir $SYNOPS_DOSS
 fi
 
-if [ ! -d $SUPERSYNOPS_DOSS ];then
-mkdir $SUPERSYNOPS_DOSS
+#Test de l'existence du dossier des superynopsys
+if [ ! -d $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS ];then
+mkdir $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS
 fi
 
+#Sequences utilises
 supsyn="supsyn.php"
 pre="?s="
 post="&e="
-page_stock="page"
 supsynstock="synopsys"
-underscore="_"
-extsupsyn=".syn.gpg"
+
 
 IFS=$'\n'
+#On affiche la page principale
 var5=$(cat synopsis.php)
+
+#la regex permettant de recuperer le nombre d'episodes et de saisons
 regex="Season\ ([0-9]+)|Episode\ ([0-9]+)"
 s=""
 e=""
-#echo "VAR 5 $var5"
+#parcours du fichier recapitulant les saisons et les episodes
 for f in $var5
 do
-#echo "F $f"
  [[ $f =~ $regex ]]
  seasons="${BASH_REMATCH[1]}"
  episodes="${BASH_REMATCH[2]}"
@@ -467,28 +474,15 @@ else
 if [ "$episodes" != "" ]; then
 echo $episodes
 e=$episodes
-curl $PAGE_SYNOPS_SITE$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$page_stock$s$e$PHP
-curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$underscore$s$underscore$e$extsupsyn 
+curl $PAGE_SYNOPS_SITE$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP
+curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN 
+fname=$(echo "$SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP" | cut -d'.' -f1)
+awk '{ if (match($0,/<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>/,m)) print m[0] }' $SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP > $fname$TXT 
+sed -i 's/<[^>]*>//g' $fname$TXT
 fi
 fi
 done
-
-#files="*"
-#point="."
-#params=$point$SEPARATEUR$SYNOPS_DOSS$SEPARATEUR$files
-#echo "FICHIERS $params"
-#mettre en txt que le synopsys des pages.php
-
-
-
-cd SYNOPS
-IFS=$'\n'
-for fich in *.php
-do
-echo "FICHIER TRAITE $fich"
-fname=$(echo "$fich" | cut -d'.' -f1)
-awk '{ if (match($0,/<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>/,m)) print m[0] }' $fich > $fname$TXT
-done
+rm $SYNOPS_DOSS$SEPARATEUR*.php
 exit 0
 
 }
