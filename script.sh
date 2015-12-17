@@ -511,21 +511,42 @@ curl -o $filename -L $url
 exit 0
 }
 
+#Methode pour l'upload et la mise a jour de fichier, on fait pas un upload naif..
 function upbackup(){
    #Genere le hash du fichier passe en parametre
    md5_fichier_pour_upload=$(md5sum $1)
-   curl $ADRESSE_LIST_BACKUPS_UPLOADEES_JSON > $NOM_FICHIER_LISTE_BACKUPS_UPLOADES
-   if [[ $(cat $NOM_FICHIER_LISTE_BACKUPS_UPLOADES) == *"$md5_fichier_pour_upload"* ]]
-   then
-   echo "Le fichier est DEJA uploade, unploader une copie? (y/n)"
-   read response
-   if [ $response == "y" ] || [ $response == "Y" ] ; then
-      curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
-   fi
-   else
-      curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE 
-   fi
    #On telecharge la derniere version de la liste, on prevoit qu'a l'avenir on pourrait supprimer en ligne
+   curl $ADRESSE_LIST_BACKUPS_UPLOADEES_JSON > $NOM_FICHIER_LISTE_BACKUPS_UPLOADES
+   #On prend seulement le md5 pour la comparaison, on exclut volontairement le cas du meme fichier avec deux noms differents (la personne en est consciente si elle upload)
+   var=$(echo $md5_fichier_pour_upload | cut -f 1 -d " ")
+   #On test si ce fichier est deja en ligne a partir de la liste de backups telechargee
+   if [[ $(cat $NOM_FICHIER_LISTE_BACKUPS_UPLOADES) == *"$var"* ]]
+   then
+       echo "Le fichier est DEJA uploade, uploader une copie? (y/n)"
+       response="init"
+       #On boucle jusqu'a avoir une reponse valable
+       while [ "$response" != "y" ] || [ "$response" != "Y" ] || [ "$response" != "n" ] || [ "$response" != "N" ]
+       do
+       read response
+       #La personne veut quand meme reuploader le meme fichier
+       if [ $response == "y" ] || [ $response == "y" ]
+       then
+          curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE
+          exit 0
+       else
+         #Elle choisit d'arreter le processus ici
+         if [ $response == "n" ] || [ $response == "N" ]; then
+            exit 0
+         fi
+         #cas d'erreur
+         echo "Recommencez!! erreur vous avez mis $response !!"
+       fi
+       done
+   else
+       #Le fichier n'est pas present en ligne
+       curl -i -F "file=@$1;filename=$1" $ADRESSE_BACKUP_SITE
+       exit 0
+   fi
    exit 0
 }
 
