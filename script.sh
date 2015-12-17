@@ -48,6 +48,7 @@ NOM_SAISON="Saison"
 NOM_EPISODE="Episode"
 SUPERSYNOPS_DOSS="SUPSYNOPS"
 CLE_SYNOPSIS="supersynopsis_signature.pub"
+RESULT_SYNOPSIS_ARCHIVES="resultat.txt"
 #********************************URLs*****************************************
 ADRESSE_BACKUP_SITE="https://daenerys.xplod.fr/backup/upload.php?login=bertrandcerfruez"
 ADRESSE_DW_BACKUP_SITE="https://daenerys.xplod.fr/backup/download.php?login=bertrandcerfruez&hash="
@@ -79,7 +80,9 @@ function usage(){
     printf "\t--dwbackup               : download d'une backup a partir de son hash\n"
     printf "\t--recupallsynops         : recupere les synopsys\n"     
     printf "\t--supp                   : supprime proprement un dossier de backup \n"
-    printf "\t--differ                 : fait la difference entre deux backups" 
+    printf "\t--differ                 : fait la difference entre deux backups"
+    printf "\t--auto                   : procedure automatise de recuperation de synopsys"
+    printf "\t--testconnexion          : permet de tester la connexion a un site donne" 
     printf "\t--conf fichierConf.txt --backupdir dossierDeStockageBackups\n"
     printf "\t-h                       : affiche ce message.\n"
 }
@@ -456,7 +459,7 @@ supsyn="supsyn.php"
 pre="?s="
 post="&e="
 supsynstock="synopsys"
-RESULT_SYNOPSIS_ARCHIVES="resultat.txt"
+
 
 IFS=$'\n'
 #On affiche la page principale
@@ -466,13 +469,14 @@ var5=$(cat synopsis.php)
 regex="Season\ ([0-9]+)|Episode\ ([0-9]+)"
 s=""
 e=""
-#parcours du fichier recapitulant les saisons et les episodes
+#Parcours du fichier recapitulant les saisons et les episodes
 for f in $var5
 do
  [[ $f =~ $regex ]]
  seasons="${BASH_REMATCH[1]}"
  episodes="${BASH_REMATCH[2]}"
 
+#Les if evitent les lignes vides dans la commande 
 if [ "$seasons" != "" ]; then
 echo $seasons
 s=$seasons
@@ -483,6 +487,7 @@ e=$episodes
 curl $PAGE_SYNOPS_SITE$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP
 curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN
 printf "\n"
+#On verifie les archives et reporte le resultat dans un fichier deide a cela
 gpg --verify $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN
 if [ $? -eq 0 ]
 then
@@ -560,9 +565,31 @@ function upbackup(){
    exit 0
 }
 
+function autoprc(){
+crontab -l > mycron
+#echo "@ hourly ./script --recupallsynops" >> mycron
+echo "@ hourly $PWD/script --recupallsynops" >> mycron
+#echo "* * * * * * ./script --recupallsynops" >> mycron
+#echo "* * * * * * $PWD/script --recupallsynops" >> mycron
+crontab mycron
+rm mycron
+}
+
+function testconnexion(){
+ping $1 -c 5
+if [ $? -eq 0 ]
+then
+    printf "\nBONNE CONNEXION\n"
+    exit 0
+else
+    printf "\nMAUVAISE CONNEXION OU ABSCENCE DE CONNEXION\n"
+    exit 1
+fi
+}
+
 
 #Cette partie gere les arguments et lance la bonne methode
-OPTS=$( getopt -o h -l conf:,backupdir:,lire,supp,installer,uploadbck,dwnfile,recupallsynops,dwbackup,differ -- "$@" )
+OPTS=$( getopt -o h -l conf:,backupdir:,lire,supp,installer,uploadbck,dwnfile,recupallsynops,dwbackup,differ,auto,testconnexion, -- "$@" )
 if [ $? != 0 ]
 then
     exit 1
@@ -582,6 +609,8 @@ while true ; do
         --dwnfile) downfile $3; shift 2;;
         --recupallsynops) recupsynops; shift 2;;
         --supp) supressbackup $3; shift 2;;
+        --auto) autoprc $3; shift 2;;
+        --testconnexion) testconnexion $3; shift 2;;
 	--installer) installpackages; shift 2;;
         --) shift; break;;
     esac
