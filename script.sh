@@ -442,12 +442,12 @@ curl -O $PAGE_SYNOPS_SITE
 
 #Test de l'existence du dossier des synopsys
 if [ ! -d $SYNOPS_DOSS ];then
-mkdir $SYNOPS_DOSS
+   mkdir $SYNOPS_DOSS
 fi
 
 #Test de l'existence du dossier des superynopsys
 if [ ! -d $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS ];then
-mkdir $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS
+   mkdir $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS
 fi
 pub="supersynopsis_signature.pub"
 #Recupere la cle publique
@@ -472,6 +472,7 @@ e=""
 #Parcours du fichier recapitulant les saisons et les episodes
 for f in $var5
 do
+#Si la ligne contient le motif, on recupere le resultat
  [[ $f =~ $regex ]]
  seasons="${BASH_REMATCH[1]}"
  episodes="${BASH_REMATCH[2]}"
@@ -484,7 +485,9 @@ else
 if [ "$episodes" != "" ]; then
 echo $episodes
 e=$episodes
+#On telecharge les fichiers adequats 
 curl $PAGE_SYNOPS_SITE$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP
+#On telecharge les archives cryptes
 curl $ADRESSE_RELATIVE_SITE$supsyn$pre$s$post$e > $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN
 printf "\n"
 #On verifie les archives et reporte le resultat dans un fichier deide a cela
@@ -496,16 +499,18 @@ else
 echo "mauvaise cle pour $supsynstock$UNDERSCORE$s$UNDERSCORE$e$EXTSUPSYN" >> $SYNOPS_DOSS$SEPARATEUR$SUPERSYNOPS_DOSS$SEPARATEUR$RESULT_SYNOPSIS_ARCHIVES 
 fi
 printf "\n"
-  
+#On fais un basename  
 fname=$(echo "$SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP" | cut -d'.' -f1)
-awk '{ if (match($0,/<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>/,m)) print m[0] }' $SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP > $fname$TXT 
+#On regarde ce qui match sur plusieurs lignes
+awk '{ if (match($0,/<p[[:space:]]class=\"left-align[[:space:]]light\"([^;])*<\/p>/,m)) print m[0] }' $SYNOPS_DOSS$SEPARATEUR$NOM_SAISON$s$NOM_EPISODE$e$PHP > $fname$TXT
+#On enleve les balises html 
 sed -i 's/<[^>]*>//g' $fname$TXT
 fi
 fi
 done
+#On supprime les fichiers PHP
 rm $SYNOPS_DOSS$SEPARATEUR*.php
 exit 0
-
 }
 
 function downbackup(){
@@ -522,6 +527,7 @@ url=$ADRESSE_DW_BACKUP_SITE$res
 # | sed -i -e 's/^M//g'
 filename=$(curl -sI  $url | grep -o -E 'filename=.*$' | sed -e 's/filename=//' | sed -e 's/"//' | sed -e 's/"//')
 echo "FICHIER $filename"
+#On telecharge le fichier
 curl -o $filename -L $url
 exit 0
 }
@@ -568,14 +574,19 @@ function upbackup(){
 function autoprc(){
 crontab -l > mycron
 #echo "@ hourly ./script --recupallsynops" >> mycron
-echo "@ hourly $PWD/script --recupallsynops" >> mycron
-#echo "* * * * * * ./script --recupallsynops" >> mycron
-#echo "* * * * * * $PWD/script --recupallsynops" >> mycron
+#echo "* * * * * $PWD/script --recupallsynops" >> mycron
+#echo "* * * * * $PWD/script --recupallsynops" >> mycron
+echo "* * * * * $PWD/script --recupallsynops" >> mycron
+#echo "* * * * * ./script --recupallsynops" >> mycron
+#echo "* * * * * $PWD/script --recupallsynops" >> mycron
 crontab mycron
 rm mycron
+exit 0
 }
 
+#Fonction qui teste la connexion
 function testconnexion(){
+#On utilise la commande ping et on reporte le resultat ensuite
 ping $1 -c 5
 if [ $? -eq 0 ]
 then
@@ -586,6 +597,10 @@ else
     exit 1
 fi
 }
+
+#function testargs(){
+#if 
+#}
 
 
 #Cette partie gere les arguments et lance la bonne methode
