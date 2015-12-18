@@ -564,7 +564,7 @@ crontab -l > mycron
 #echo "@ hourly ./script --recupallsynops" >> mycron
 #echo "* * * * * $PWD/script --recupallsynops" >> mycron
 #echo "* * * * * $PWD/script --recupallsynops" >> mycron
-echo "* * * * * $PWD/script --recupallsynops" >> mycron
+echo "@hourly $PWD/script --recupallsynops" >> mycron
 #echo "* * * * * ./script --recupallsynops" >> mycron
 #echo "* * * * * $PWD/script --recupallsynops" >> mycron
 crontab mycron
