@@ -31,7 +31,7 @@ UTILISATEUR=$(whoami)
 CONF_SCRIPT="CONF_SCRIPT"
 #*********************CONFIG supression automatique***************************  
 #mis a 5 pour les tests la valeur normale est de 100
-LIMITE_NB_FICHIERS_AUTO_SUPPRESSION=3
+LIMITE_NB_FICHIERS_AUTO_SUPPRESSION=100
 NOM_FICHIER_LISTANT_LESBACKUPS="listedesbackup"
 #****************************CONFIG backup************************************
 #LOCAL
