@@ -39,6 +39,7 @@ fichier_conf_nom=""
 FICHIER_CONF_DEFAUT="test2.txt"
 FICHIER_SAUVEGARDE_CONFIG="save_CONF.txt"
 FICHIER_TEST_INSTALLATION="confBASHBACKUP.txt"
+BACKUP_NOM_PREFIXE="backup_"
 #DISTANT
 REPERTOIRE_FICHIERS_TELECHARGES="saved_files_directory"
 NOM_FICHIER_LISTE_BACKUPS_UPLOADES="liste_backups_uploades.txt"
@@ -307,12 +308,14 @@ function supressbackup(){
     exit 0
 }
 
+
 #Fonction de backup
 #Creer un dossier pour les backup s'il n'a pas ete cree avant
 function backup(){
 verifconf $1 
-backup="backup_"
 current_hour=$(date +%Y%H%M%S)
+fichiers_provisoires=()
+i=0
 
     if [ -d "$1" ]
     then
@@ -320,47 +323,32 @@ current_hour=$(date +%Y%H%M%S)
     else
 	mkdir "$1"
     fi
-	#chemin
-	#echo -e "full_path=$PWD$SEPARATEUR$1$SEPARATEUR$backup$current_hour \n" 
-	#redirection ambigu si pas de param
-	full_path=$PWD$SEPARATEUR$1$SEPARATEUR$backup$current_hour
-	backup_name=$backup$current_hour
-	#full_path=$backup$current_hour
+	backup_name=$BACKUP_NOM_PREFIXE$current_hour
 	echo -e "Recuperation des dossiers de: $fichier_conf_nom \n"
-
-files=$(cat  $fichier_conf_nom)
-for line in $files
+while read line 
     do
-	echo -e "copie de $line"
-	#find /home -type d -name $line -print
+	echo -e "Obtention de $line"
 	result=$(sudo find  -type d -name $line)
-	if [ -z $result ]
+	if [ ! -z $result ]
 		then
-			echo "$fichier n'existe pas"
-		else
-			echo "$fichier trouve:"
-			echo $result
-			#$full_path reste le meme dans la boucle!
-			cp -avr "$line" "$full_path"
-
-			echo -e "\nORIGINE: $line"
-			echo -e "DESTINATION: $full_path"
+		    fichiersfichiers_provisoires[$i]=$result
+                else
+                    echo "$fichier n'existe pas"    
 		fi
-    done
+let "i++"    
+done < $fichier_conf_nom
 
-    echo "le backup est dans :" $1 "est il est crypté"
-    #Tar l'interieur du $1
-    cd $1 
-    tar cvzf $backup_name.tar.gz $backup_name
-    crypte $backup_name.tar.gz
-    #demande dans l'enonce juste la personne qui a cree peut lire la backup
-    sudo chmod 400 $backup_name.tar.gz.gpg
-    rm -R -f $backup_name
-    rm -f $backup_name.tar.gz
-    cd ..
-    autosupressbackup $backup_name.tar.gz.gpg $1
+tar rf $1$SEPARATEUR$backup_name.tar "${fichiersfichiers_provisoires[@]}" 
+gzip $1$SEPARATEUR$backup_name.tar
+crypte $1$SEPARATEUR$backup_name.tar.gz
+#demande dans l'enonce juste la personne qui a cree peut lire la backup
+sudo chmod 400 $1$SEPARATEUR$backup_name.tar.gz.gpg
+rm -R -f $1$SEPARATEUR$backup_name
+rm -f $1$SEPARATEUR$backup_name.tar.gz
+echo "le backup est dans :" $1 "il est crypté"
+autosupressbackup $backup_name.tar.gz.gpg $1        
+exit 0
  }
-
 
 #Fonction qui recupere le fichier de configuration
 function recup(){
