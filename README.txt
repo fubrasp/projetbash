@@ -1,1 +1,1 @@
-project about backup in bash
+project about backups in bash script
